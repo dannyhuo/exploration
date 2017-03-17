@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans  
+    xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+    xmlns:p="http://www.springframework.org/schema/p"  
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">  
+  
+    <bean id = "connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">  
+        <property name = "brokerURL" value = "tcp://localhost:61616"/>  
+    </bean>  
+      
+    <bean id = "topicDestination" class="org.apache.activemq.command.ActiveMQTopic"  
+        autowire="constructor">  
+        <constructor-arg value="com.spring.xkey.jms.topic"/>  
+    </bean>  
+    <bean id="sendMessage" class="com.spring.xkey.jms.SendMessage">  
+        <property name="username" value="xkey"/>  
+        <property name="password" value="1234567890"/>  
+    </bean>  
+    <bean id = "jmsMessageConverter" class="com.spring.xkey.jms.JmsMessageConverter">  
+        <property name="sendMessage" ref="sendMessage"/>  
+    </bean>  
+    <!-- 创建JMS发送信息的模板的对象 -->    
+    <bean id = "jmsTemplate" class="org.springframework.jms.core.JmsTemplate">  
+        <property name="connectionFactory" ref="connectionFactory"/>  
+        <!--property name="defaultDestination" ref="topicDestination"/-->  
+        <property name="receiveTimeout" value="6000"/>  
+        <property name="messageConverter" ref="jmsMessageConverter"/>  
+    </bean>  
+      
+    <bean id = "jmsMessageListener" class="com.spring.xkey.jms.JmsMessageListener">  
+    </bean>  
+      
+    <bean id = "publisher" class="com.spring.xkey.jms.Publisher">  
+        <property name="jmsTemplate" ref="jmsTemplate"/>  
+        <property name="destinations" ref="topicDestination" />  
+        <property name="sendMessage" ref="sendMessage"/>  
+          
+    </bean>  
+      
+    <bean id = "consumer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">  
+        <property name="connectionFactory" ref="connectionFactory"/>  
+        <property name="destination" ref="topicDestination" />  
+        <property name="messageListener" ref="jmsMessageListener" />  
+    </bean>  
+      
+</beans>

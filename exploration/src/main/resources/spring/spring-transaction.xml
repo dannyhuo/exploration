@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd 
+	http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd 
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd"
+	default-autowire="byName" default-lazy-init="false">
+
+    <!-- MySQL数据源的事务管理配置 -->
+	<bean id="transactionManager_fruit_mysql" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource_fruit_mysql" />
+		<qualifier value="transactionManager_fruit_mysql" />
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="transactionManager_fruit_mysql"/>
+	
+	<tx:advice id="crmTxAdvice" transaction-manager="transactionManager_fruit_mysql">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true"/>
+			<tx:method name="find*" read-only="true"/>
+			<tx:method name="select*" read-only="true"/>
+			<tx:method name="*" propagation="REQUIRED" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- <aop:config proxy-target-class="true">
+		<aop:pointcut id="crmMysqlServiceOperation"
+			expression="(
+				execution(* com.lvmama.crm.timetask.ComputeMemberGradeAndGrowthValueTask.computeMemberGradAndGrowthValue(..))
+			)"
+		/>
+		<aop:advisor advice-ref="crmTxAdvice" pointcut-ref="crmMysqlServiceOperation" />
+	</aop:config> -->
+
+ </beans>

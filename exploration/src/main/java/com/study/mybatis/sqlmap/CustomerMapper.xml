@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.study.mybatis.mapper.CustomerMapper" >
+  <resultMap id="BaseResultMap" type="com.study.mybatis.model.vo.CustomerVo" >
+    <id column="customer_id" property="customerId" jdbcType="BIGINT" />
+    <result column="customer_no" property="customerNo" jdbcType="CHAR" />
+    <result column="login_name" property="loginName" jdbcType="VARCHAR" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="safety_factor" property="safetyFactor" jdbcType="VARCHAR" />
+    <result column="real_name" property="realName" jdbcType="VARCHAR" />
+    <result column="nick_name" property="nickName" jdbcType="VARCHAR" />
+    <result column="mobile_number" property="mobileNumber" jdbcType="VARCHAR" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="gender" property="gender" jdbcType="CHAR" />
+    <result column="qq" property="qq" jdbcType="VARCHAR" />
+    <result column="wechat" property="wechat" jdbcType="VARCHAR" />
+    <result column="birthday" property="birthday" jdbcType="TIMESTAMP" />
+    <result column="image_url" property="imageUrl" jdbcType="VARCHAR" />
+    <result column="vip_level" property="vipLevel" jdbcType="TINYINT" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />
+    <result column="last_login_time" property="lastLoginTime" jdbcType="TIMESTAMP" />
+    <result column="is_valid" property="isValid" jdbcType="CHAR" />
+    <result column="costomer_status" property="costomerStatus" jdbcType="TINYINT" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    customer_id, customer_no, login_name, password, safety_factor, real_name, nick_name, 
+    mobile_number, email, gender, qq, wechat, birthday, image_url, vip_level, create_time, 
+    update_time, last_login_time, is_valid, costomer_status, remark
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from customer
+    where customer_id = #{customerId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from customer
+    where customer_id = #{customerId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.study.mybatis.model.Customer" >
+    insert into customer (customer_id, customer_no, login_name, 
+      password, safety_factor, real_name, 
+      nick_name, mobile_number, email, 
+      gender, qq, wechat, birthday, 
+      image_url, vip_level, create_time, 
+      update_time, last_login_time, is_valid, 
+      costomer_status, remark)
+    values (#{customerId,jdbcType=BIGINT}, #{customerNo,jdbcType=CHAR}, #{loginName,jdbcType=VARCHAR}, 
+      #{password,jdbcType=VARCHAR}, #{safetyFactor,jdbcType=VARCHAR}, #{realName,jdbcType=VARCHAR}, 
+      #{nickName,jdbcType=VARCHAR}, #{mobileNumber,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, 
+      #{gender,jdbcType=CHAR}, #{qq,jdbcType=VARCHAR}, #{wechat,jdbcType=VARCHAR}, #{birthday,jdbcType=TIMESTAMP}, 
+      #{imageUrl,jdbcType=VARCHAR}, #{vipLevel,jdbcType=TINYINT}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{lastLoginTime,jdbcType=TIMESTAMP}, #{isValid,jdbcType=CHAR}, 
+      #{costomerStatus,jdbcType=TINYINT}, #{remark,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.study.mybatis.model.Customer" >
+    insert into customer
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="customerId != null" >
+        customer_id,
+      </if>
+      <if test="customerNo != null" >
+        customer_no,
+      </if>
+      <if test="loginName != null" >
+        login_name,
+      </if>
+      <if test="password != null" >
+        password,
+      </if>
+      <if test="safetyFactor != null" >
+        safety_factor,
+      </if>
+      <if test="realName != null" >
+        real_name,
+      </if>
+      <if test="nickName != null" >
+        nick_name,
+      </if>
+      <if test="mobileNumber != null" >
+        mobile_number,
+      </if>
+      <if test="email != null" >
+        email,
+      </if>
+      <if test="gender != null" >
+        gender,
+      </if>
+      <if test="qq != null" >
+        qq,
+      </if>
+      <if test="wechat != null" >
+        wechat,
+      </if>
+      <if test="birthday != null" >
+        birthday,
+      </if>
+      <if test="imageUrl != null" >
+        image_url,
+      </if>
+      <if test="vipLevel != null" >
+        vip_level,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="updateTime != null" >
+        update_time,
+      </if>
+      <if test="lastLoginTime != null" >
+        last_login_time,
+      </if>
+      <if test="isValid != null" >
+        is_valid,
+      </if>
+      <if test="costomerStatus != null" >
+        costomer_status,
+      </if>
+      <if test="remark != null" >
+        remark,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="customerId != null" >
+        #{customerId,jdbcType=BIGINT},
+      </if>
+      <if test="customerNo != null" >
+        #{customerNo,jdbcType=CHAR},
+      </if>
+      <if test="loginName != null" >
+        #{loginName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="safetyFactor != null" >
+        #{safetyFactor,jdbcType=VARCHAR},
+      </if>
+      <if test="realName != null" >
+        #{realName,jdbcType=VARCHAR},
+      </if>
+      <if test="nickName != null" >
+        #{nickName,jdbcType=VARCHAR},
+      </if>
+      <if test="mobileNumber != null" >
+        #{mobileNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null" >
+        #{gender,jdbcType=CHAR},
+      </if>
+      <if test="qq != null" >
+        #{qq,jdbcType=VARCHAR},
+      </if>
+      <if test="wechat != null" >
+        #{wechat,jdbcType=VARCHAR},
+      </if>
+      <if test="birthday != null" >
+        #{birthday,jdbcType=TIMESTAMP},
+      </if>
+      <if test="imageUrl != null" >
+        #{imageUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="vipLevel != null" >
+        #{vipLevel,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastLoginTime != null" >
+        #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isValid != null" >
+        #{isValid,jdbcType=CHAR},
+      </if>
+      <if test="costomerStatus != null" >
+        #{costomerStatus,jdbcType=TINYINT},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.study.mybatis.model.Customer" >
+    update customer
+    <set >
+      <if test="customerNo != null" >
+        customer_no = #{customerNo,jdbcType=CHAR},
+      </if>
+      <if test="loginName != null" >
+        login_name = #{loginName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="safetyFactor != null" >
+        safety_factor = #{safetyFactor,jdbcType=VARCHAR},
+      </if>
+      <if test="realName != null" >
+        real_name = #{realName,jdbcType=VARCHAR},
+      </if>
+      <if test="nickName != null" >
+        nick_name = #{nickName,jdbcType=VARCHAR},
+      </if>
+      <if test="mobileNumber != null" >
+        mobile_number = #{mobileNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null" >
+        gender = #{gender,jdbcType=CHAR},
+      </if>
+      <if test="qq != null" >
+        qq = #{qq,jdbcType=VARCHAR},
+      </if>
+      <if test="wechat != null" >
+        wechat = #{wechat,jdbcType=VARCHAR},
+      </if>
+      <if test="birthday != null" >
+        birthday = #{birthday,jdbcType=TIMESTAMP},
+      </if>
+      <if test="imageUrl != null" >
+        image_url = #{imageUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="vipLevel != null" >
+        vip_level = #{vipLevel,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastLoginTime != null" >
+        last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isValid != null" >
+        is_valid = #{isValid,jdbcType=CHAR},
+      </if>
+      <if test="costomerStatus != null" >
+        costomer_status = #{costomerStatus,jdbcType=TINYINT},
+      </if>
+      <if test="remark != null" >
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where customer_id = #{customerId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.study.mybatis.model.Customer" >
+    update customer
+    set customer_no = #{customerNo,jdbcType=CHAR},
+      login_name = #{loginName,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      safety_factor = #{safetyFactor,jdbcType=VARCHAR},
+      real_name = #{realName,jdbcType=VARCHAR},
+      nick_name = #{nickName,jdbcType=VARCHAR},
+      mobile_number = #{mobileNumber,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      gender = #{gender,jdbcType=CHAR},
+      qq = #{qq,jdbcType=VARCHAR},
+      wechat = #{wechat,jdbcType=VARCHAR},
+      birthday = #{birthday,jdbcType=TIMESTAMP},
+      image_url = #{imageUrl,jdbcType=VARCHAR},
+      vip_level = #{vipLevel,jdbcType=TINYINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+      is_valid = #{isValid,jdbcType=CHAR},
+      costomer_status = #{costomerStatus,jdbcType=TINYINT},
+      remark = #{remark,jdbcType=VARCHAR}
+    where customer_id = #{customerId,jdbcType=BIGINT}
+  </update>
+  
+  <select id="querySelective" resultMap="BaseResultMap" parameterType="java.util.HashMap" >
+    select 
+    <include refid="Base_Column_List" />
+    from customer
+    <where>
+      1 = 1 
+      <if test="customerId != null">
+      	AND customer_id = #{customerId,jdbcType=BIGINT}
+      </if>
+      <if test="customerNo != null" >
+        AND customer_no = #{customerNo,jdbcType=CHAR}
+      </if>
+      <if test="loginName != null" >
+        AND login_name = #{loginName,jdbcType=VARCHAR}
+      </if>
+      <if test="password != null" >
+        AND password = #{password,jdbcType=VARCHAR}
+      </if>
+      <if test="safetyFactor != null" >
+        AND safety_factor = #{safetyFactor,jdbcType=VARCHAR}
+      </if>
+      <if test="realName != null" >
+        AND real_name = #{realName,jdbcType=VARCHAR}
+      </if>
+      <if test="nickName != null" >
+        AND nick_name = #{nickName,jdbcType=VARCHAR}
+      </if>
+      <if test="mobileNumber != null" >
+        AND mobile_number = #{mobileNumber,jdbcType=VARCHAR}
+      </if>
+      <if test="email != null" >
+        AND email = #{email,jdbcType=VARCHAR}
+      </if>
+      <if test="gender != null" >
+        AND gender = #{gender,jdbcType=CHAR}
+      </if>
+      <if test="qq != null" >
+        AND qq = #{qq,jdbcType=VARCHAR}
+      </if>
+      <if test="wechat != null" >
+        AND wechat = #{wechat,jdbcType=VARCHAR}
+      </if>
+      <if test="birthday != null" >
+        birthday = #{birthday,jdbcType=TIMESTAMP}
+      </if>
+      <if test="imageUrl != null" >
+        AND image_url = #{imageUrl,jdbcType=VARCHAR}
+      </if>
+      <if test="vipLevel != null" >
+        AND vip_level = #{vipLevel,jdbcType=TINYINT}
+      </if>
+      <if test="createTime != null" >
+        AND create_time = #{createTime,jdbcType=TIMESTAMP}
+      </if>
+      <if test="updateTime != null" >
+        AND update_time = #{updateTime,jdbcType=TIMESTAMP}
+      </if>
+      <if test="lastLoginTime != null" >
+        AND last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP}
+      </if>
+      <if test="isValid != null" >
+        AND is_valid = #{isValid,jdbcType=CHAR}
+      </if>
+      <if test="costomerStatus != null" >
+        AND costomer_status = #{costomerStatus,jdbcType=TINYINT}
+      </if>
+      <if test="remark != null" >
+        AND remark = #{remark,jdbcType=VARCHAR}
+      </if>
+    </where>
+  </select>
+</mapper>
