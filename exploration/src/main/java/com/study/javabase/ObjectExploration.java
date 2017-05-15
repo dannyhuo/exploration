@@ -78,7 +78,12 @@ public class ObjectExploration implements Cloneable, Serializable{
 	}
 	
 	public static void main(String[] args) {
-		testcloneAndDeepClone();
+		//testcloneAndDeepClone();
+		
+		Object obj = new Object();
+		synchronized (obj) {
+			obj.notify();
+		}
 	}
 
 	public int getCount() {
