@@ -29,7 +29,7 @@ public class DoProcessor extends Thread{
 	private String outputPath;//结果输出路径
 	
 	/**执行计算的任务*/
-	private OrdRptTask orderCalTask = null;
+	private OrdRptTask ordRptTask = null;
 	
 	/**订单是否处理完毕标志位*/
 	private boolean orderDidOutflag = false;
@@ -74,11 +74,11 @@ public class DoProcessor extends Thread{
 	 * 执行中
 	 */
 	private void doProcess(){
-		orderCalTask = new OrdRptTask(rulePath, orderPath, outputPath);
-		orderCalTask.start();
-		while(this.progress.getValue() < 100 && !orderCalTask.isTaskFinished()){
+		ordRptTask = new OrdRptTask(rulePath, orderPath, outputPath);
+		ordRptTask.start();
+		while(!ordRptTask.isTaskFinished()){
 			try {
-				Thread.sleep(100);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -94,6 +94,12 @@ public class DoProcessor extends Thread{
 			}
 		}
 		this.progress.setValue(100);
+		
+		String info = this.getOrdTaskInfo();
+		if(info.length() > 1){
+			logTextArea.append(info);
+			logTextArea.selectAll();
+		}
 	}
 	
 	/**
@@ -101,7 +107,7 @@ public class DoProcessor extends Thread{
 	 */
 	private void finished(){
 		progress.setIndeterminate(false);
-		progress.setString(orderCalTask.getTaskRunResult().item2);
+		progress.setString(ordRptTask.getTaskRunResult().item2);
 
 		//将窗口设置为最大化
 		myForm.maxSize();
@@ -120,9 +126,9 @@ public class DoProcessor extends Thread{
 	}
 
 	private BigDecimal percentFinished(){
-		if(orderCalTask.getTotalRow() > 0){
-			BigDecimal cur = new BigDecimal(orderCalTask.getCurRow());
-			BigDecimal total = new BigDecimal(orderCalTask.getTotalRow());
+		if(ordRptTask.getTotalRow() > 0){
+			BigDecimal cur = new BigDecimal(ordRptTask.getCurRow());
+			BigDecimal total = new BigDecimal(ordRptTask.getTotalRow()+1);
 			BigDecimal percent = cur.divide(total, 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
 			return percent;
 		}
@@ -136,14 +142,16 @@ public class DoProcessor extends Thread{
 	 */
 	private String getOrdTaskInfo(){
 		String info = null;
-		if(null != this.orderCalTask){
-			if(orderCalTask.isTaskFinished()){
-				info = orderCalTask.getTaskRunResult().item2;
+		StringBuilder msg = new StringBuilder();
+		if(null != this.ordRptTask){
+			if(ordRptTask.isTaskFinished()){
+				msg.append(ordRptTask.getTaskRunResult().item2);
+				msg.append("\r\n");
+				return msg.toString();
 			}
 			
-			StringBuilder msg = new StringBuilder();
-			if(!orderDidOutflag && orderCalTask.getCurRow() > orderCalTask.getTotalRow()){
-				List<OrdModel> errorOrdersModel = orderCalTask.getCaledErrorModel();
+			if(!orderDidOutflag && ordRptTask.getCurRow() >= ordRptTask.getTotalRow()){
+				List<OrdModel> errorOrdersModel = ordRptTask.getCaledErrorModel();
 				msg.append("已完成");
 				msg.append(new DecimalFormat("##.###").format(percentFinished()));
 				msg.append("% ！\r\n");
@@ -160,7 +168,7 @@ public class DoProcessor extends Thread{
 			}
 			
 			msg.append("当前正在处理第");
-			msg.append(orderCalTask.getCurRow());
+			msg.append(ordRptTask.getCurRow());
 			msg.append("条订单, 已完成");
 			msg.append(percentFinished());
 			msg.append("% ！");

@@ -74,7 +74,12 @@ public class BaseValue implements Serializable{
 				rule.getSubsidyType().data.shortValue()){
 			Integer roomNight = ord.getRoomNight().data;
 			if(roomNight != null && roomNight.intValue() > 0){
-				return rule.getSubsidy().data.doubleValue() * roomNight.doubleValue();
+				double subsidy = rule.getSubsidy().data.doubleValue() * roomNight.doubleValue();
+				if(null != rule.getSupplierPackageRoomCount().data && 
+						rule.getSupplierPackageRoomCount().data.intValue() > 0){
+					subsidy = subsidy / rule.getSupplierPackageRoomCount().data.doubleValue();
+				}
+				return subsidy;
 			}
 		}else if(Canstant.SUBSIDY_TYPE.BY_CHILDREN.getValue() == 
 				rule.getSubsidyType().data.shortValue()){

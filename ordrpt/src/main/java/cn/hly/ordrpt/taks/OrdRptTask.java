@@ -77,7 +77,8 @@ public class OrdRptTask extends Thread{
 			taskRunResult.item2 = "任务已执行成功，共处理" + this.totalRow + "条订单！";
 		} catch (Exception e) {
 			taskRunResult.item1 = false;
-			taskRunResult.item2 = "任务已执行失败，系统异常：" + e.getMessage();
+			taskRunResult.item2 = "任务执行失败，系统异常：\r\n" + e.getMessage();
+			
 			e.printStackTrace();
 		}
 		taskFinished = true;

@@ -50,7 +50,24 @@ public class OrdModel {
 		}
 		
 		OrdModel ordModel = new OrdModel();
-		Cell cell = row.getCell(ordModel.adult.index, Row.RETURN_BLANK_AS_NULL);
+		Cell cell = row.getCell(ordModel.orderId.index, Row.RETURN_BLANK_AS_NULL);
+		if(null != cell){
+			ordModel.orderId.data = (long) cell.getNumericCellValue();
+		}else{
+			return null;
+		}
+		
+		cell = row.getCell(ordModel.productId.index, Row.RETURN_BLANK_AS_NULL);
+		if(null != cell){
+			ordModel.productId.data = (long) cell.getNumericCellValue();
+		}
+		
+		cell = row.getCell(ordModel.goodsId.index, Row.RETURN_BLANK_AS_NULL);
+		if(null != cell){
+			ordModel.goodsId.data = (long) cell.getNumericCellValue();
+		}
+		
+		cell = row.getCell(ordModel.adult.index, Row.RETURN_BLANK_AS_NULL);
 		if(null != cell){
 			ordModel.adult.data = (int) cell.getNumericCellValue();
 		}
@@ -80,11 +97,6 @@ public class OrdModel {
 			ordModel.createTime.data = cell.getDateCellValue();
 		}
 		
-		cell = row.getCell(ordModel.goodsId.index, Row.RETURN_BLANK_AS_NULL);
-		if(null != cell){
-			ordModel.goodsId.data = (long) cell.getNumericCellValue();
-		}
-		
 		cell = row.getCell(ordModel.goodsName.index, Row.RETURN_BLANK_AS_NULL);
 		if(null != cell){
 			ordModel.goodsName.data = cell.getStringCellValue();
@@ -100,11 +112,6 @@ public class OrdModel {
 			ordModel.ordChannel.data = cell.getStringCellValue();
 		}
 		
-		cell = row.getCell(ordModel.orderId.index, Row.RETURN_BLANK_AS_NULL);
-		if(null != cell){
-			ordModel.orderId.data = (long) cell.getNumericCellValue();
-		}
-		
 		cell = row.getCell(ordModel.packagePm.index, Row.RETURN_BLANK_AS_NULL);
 		if(null != cell){
 			ordModel.packagePm.data = cell.getStringCellValue();
@@ -115,10 +122,7 @@ public class OrdModel {
 			ordModel.paymentTime.data = cell.getDateCellValue();
 		}
 		
-		cell = row.getCell(ordModel.productId.index, Row.RETURN_BLANK_AS_NULL);
-		if(null != cell){
-			ordModel.productId.data = (long) cell.getNumericCellValue();
-		}
+		
 		
 		cell = row.getCell(ordModel.productName.index, Row.RETURN_BLANK_AS_NULL);
 		if(null != cell){

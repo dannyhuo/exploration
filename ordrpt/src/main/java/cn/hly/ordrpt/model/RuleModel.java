@@ -32,6 +32,8 @@ public class RuleModel {
 	private CellMeta<Integer, Tuple<Date, Date>> seckillDateRange;
 	/**类型，线路、门票*/
 	private CellMeta<Integer, String> goodsType;
+	/**供应商打包间数*/
+	private CellMeta<Integer, Integer> supplierPackageRoomCount;
 	/**日期格式化工具*/
 	private static SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -65,6 +67,9 @@ public class RuleModel {
 		
 		/**类型，线路、门票*/
 		goodsType = new CellMeta<>(5);
+		/**供应商打包间数*/
+		supplierPackageRoomCount = new CellMeta<>(26);
+		
 	}
 	
 	
@@ -139,6 +144,11 @@ public class RuleModel {
 	    cell = row.getCell(ruleModel.getGoodsType().index, Row.RETURN_BLANK_AS_NULL);
 	    if(null != cell){
 	    	ruleModel.getGoodsType().data = cell.getStringCellValue();
+	    }
+	    
+	    cell = row.getCell(ruleModel.getSupplierPackageRoomCount().index, Row.RETURN_BLANK_AS_NULL);
+	    if(null != cell){
+	    	ruleModel.getSupplierPackageRoomCount().data = (int)cell.getNumericCellValue();
 	    }
 	    
 	    return ruleModel;
@@ -224,5 +234,15 @@ public class RuleModel {
 	public void setGoodsType(CellMeta<Integer, String> goodsType) {
 		this.goodsType = goodsType;
 	}
+
+	public CellMeta<Integer, Integer> getSupplierPackageRoomCount() {
+		return supplierPackageRoomCount;
+	}
+
+	public void setSupplierPackageRoomCount(CellMeta<Integer, Integer> supplierPackageRoomCount) {
+		this.supplierPackageRoomCount = supplierPackageRoomCount;
+	}
+	
+	
 
 }
