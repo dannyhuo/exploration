@@ -212,10 +212,7 @@ public class BaseValue implements Serializable{
 	public Float getCalPercent(Long weft){
 		Double v1 = getSubsidySum(weft);
 		Double v2 = getTemaiSubsidySum(weft);
-		if(null != v1 && null != v2 && v1.floatValue() > 0){
-			System.out.print(v2);
-			System.out.print(v1);
-			System.out.println((v2.floatValue() / v1.floatValue()));
+		if(null != v1 && null != v2 && v1.floatValue() != 0f){
 			return (v2.floatValue() / v1.floatValue());
 		}
 		return null;

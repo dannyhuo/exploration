@@ -86,6 +86,7 @@ public class RptModel {
 			createOrdRptHeader(ordSheet.createRow(0));//写表头
 			Iterator<Entry<String, Map<Long, OrderWeftValue>>> buIter = this.rptGrpByOrd.entrySet().iterator();
 			int i = 1;
+			SumModel rptGrpByOrdSum = new SumModel();
 			while(buIter.hasNext()){
 				Entry<String, Map<Long, OrderWeftValue>> buGroup = buIter.next();
 				if(buGroup.getValue().size() > 0){
@@ -93,11 +94,16 @@ public class RptModel {
 					while(weftIter.hasNext()){
 						Entry<Long, OrderWeftValue> wftValue = weftIter.next();
 						Row row = ordSheet.createRow(i);
-						wftValue.getValue().write(row);
+						OrderWeftValue orderWeftValue = wftValue.getValue();
+						orderWeftValue.write(row);
+						
+						sumByOrd(rptGrpByOrdSum, orderWeftValue);
 						i++;
 					}
 				}
 			}
+			//写合计行
+			rptGrpByOrdSum.writeSum(ordSheet.createRow(i+1), 6);
 		}
 		
 		
@@ -106,6 +112,7 @@ public class RptModel {
 			createProdRptHeader(prdSheet.createRow(0));//写表头
 			Iterator<Entry<String, Map<Long, ProductWeftValue>>> buIter = this.rptGrpByProd.entrySet().iterator();
 			int i = 1;
+			SumModel rptGrpByProdSum = new SumModel();
 			while(buIter.hasNext()){
 				Entry<String, Map<Long, ProductWeftValue>> buGroup = buIter.next();
 				if(buGroup.getValue().size() > 0){
@@ -113,11 +120,17 @@ public class RptModel {
 					while(weftIter.hasNext()){
 						Entry<Long, ProductWeftValue> wftValue = weftIter.next();
 						Row row = prdSheet.createRow(i);
-						wftValue.getValue().write(row);
+						ProductWeftValue productWeftValue = wftValue.getValue();
+						productWeftValue.write(row);
+						
+						sumByProd(rptGrpByProdSum, productWeftValue);
 						i++;
 					}
 				}
 			}
+			
+			//写合计行
+			rptGrpByProdSum.writeSum(prdSheet.createRow(i), 4);
 		}
 		
 		//写入文件流
@@ -134,8 +147,41 @@ public class RptModel {
 		}
 	}
 	
+	private void sumByOrd(SumModel sumModel, OrderWeftValue value){
+		if("线路".equals(value.goodsType)){
+			sumModel.addAdultSum(value.getAuditAvg());
+			sumModel.addChildrenSum(value.getChildrenAvg());
+		}else{
+			sumModel.addAdultSum((float)value.getAuditSum());
+			sumModel.addChildrenSum((float)value.getChildrenSum());
+		}
+		sumModel.addSubsidyAmountSum(value.getSubsidySum(value.getOrderId()));
+		sumModel.addTemaiSubsidyAmountSum(value.getTemaiSubsidySum(value.getOrderId()));
+		
+		this.sum(sumModel, value);
+	}
 	
+	private void sumByProd(SumModel sumModel, ProductWeftValue value){
+		if("线路".equals(value.goodsType)){
+			sumModel.addAdultSum(value.getTktAdultSumAvg());
+			sumModel.addChildrenSum(value.getTktChildrenSumAvg());
+		}else{
+			sumModel.addAdultSum((float)value.getAuditSum());
+			sumModel.addChildrenSum((float)value.getChildrenSum());
+		}
+		sumModel.addSubsidyAmountSum(value.getSubsidySum(value.getProductId()));
+		sumModel.addTemaiSubsidyAmountSum(value.getTemaiSubsidySum(value.getProductId()));
+
+		this.sum(sumModel, value);
+	}
 	
+	private void sum(SumModel sumModel, BaseValue value){
+		sumModel.addCouponAmountSum(value.getCouponAmountSum());
+		sumModel.addGrossMarginSum(value.getGrossMarginSum());
+		sumModel.addRoomNightSum(value.getRoomNightSum());
+		sumModel.addSalesPromotionAmountSum(value.getSalesPromotionAmountSum());
+		sumModel.addTurnoverAmountSum(value.getTurnoverAmountSum());
+	}
 	
 	/**
 	 * 创建订单纬度报表表头
