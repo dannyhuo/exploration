@@ -52,7 +52,8 @@ public class ProductWeftValue extends BaseValue{
 		this.buName = ord.getBuName().data;
 		this.goodsIds.add(ord.getGoodsId().data);
 		this.orderIds.add(ord.getOrderId().data);
-		this.addSubsidyAmount(ord.getProductId().data, rule.getSubsidy().data, rule.getSubsidyPercent().data);
+		
+		this.addSubsidyAmount(ord.getProductId().data, calSubsidy(ord, rule), rule.getSubsidyPercent().data);
 		
 		super.eat(ord, rule);
 	}

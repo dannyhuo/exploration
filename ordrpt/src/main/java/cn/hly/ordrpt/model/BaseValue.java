@@ -3,6 +3,7 @@ package cn.hly.ordrpt.model;
 import java.io.Serializable;
 
 import cn.hly.ordrpt.model.meta.SubsidyMeta;
+import hly.com.ordrpt.model.Canstant;
 
 public class BaseValue implements Serializable{
 
@@ -44,6 +45,46 @@ public class BaseValue implements Serializable{
 		this.addTurnoverAmountSum(ord.getTurnover().data);
 	}
 	
+	/**
+	 * 计算补贴
+	 * @param ord
+	 * @param rule
+	 * @return
+	 */
+	protected double calSubsidy(OrdModel ord, RuleModel rule){
+		if(Canstant.SUBSIDY_TYPE.BY_AUDIT.getValue() == 
+				rule.getSubsidyType().data.shortValue()){
+			Integer adult = ord.getAdult().data;
+			if(adult != null && adult.intValue() > 0){
+				return rule.getSubsidy().data.doubleValue() * adult.doubleValue();
+			}
+		}else if(Canstant.SUBSIDY_TYPE.BY_AUDIT_AND_CHILDREN.getValue() == 
+				rule.getSubsidyType().data.shortValue()){
+			Integer adult = ord.getAdult().data;
+			Integer children = ord.getChildren().data;
+			double subsidy = 0;
+			if(adult != null && adult.intValue() > 0){
+				subsidy += rule.getSubsidy().data.doubleValue() * adult.doubleValue();
+			}
+			if(children != null && children.intValue() > 0){
+				subsidy += rule.getSubsidy().data.doubleValue() * children.doubleValue();
+			}
+			return subsidy;
+		}else if(Canstant.SUBSIDY_TYPE.BY_ROOM_NIGHT.getValue() == 
+				rule.getSubsidyType().data.shortValue()){
+			Integer roomNight = ord.getRoomNight().data;
+			if(roomNight != null && roomNight.intValue() > 0){
+				return rule.getSubsidy().data.doubleValue() * roomNight.doubleValue();
+			}
+		}else if(Canstant.SUBSIDY_TYPE.BY_CHILDREN.getValue() == 
+				rule.getSubsidyType().data.shortValue()){
+			Integer children = ord.getChildren().data;
+			if(children != null && children.intValue() > 0){
+				return rule.getSubsidy().data.doubleValue() * children.doubleValue();
+			}
+		}
+		return 0;
+	}
 	
 
 	public int getAuditSum() {

@@ -130,7 +130,7 @@ public class RptModel {
 			}
 			
 			//写合计行
-			rptGrpByProdSum.writeSum(prdSheet.createRow(i), 4);
+			rptGrpByProdSum.writeSum(prdSheet.createRow(i+1), 4);
 		}
 		
 		//写入文件流

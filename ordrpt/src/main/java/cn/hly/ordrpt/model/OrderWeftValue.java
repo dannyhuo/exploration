@@ -38,7 +38,8 @@ public class OrderWeftValue extends BaseValue{
 		this.isCpsid = ord.getCpsId().data;
 		this.productId = ord.getProductId().data;
 		this.goodsId = ord.getProductId().data;
-		this.addSubsidyAmount(ord.getOrderId().data, rule.getSubsidy().data, rule.getSubsidyPercent().data);
+		
+		this.addSubsidyAmount(ord.getOrderId().data, calSubsidy(ord, rule), rule.getSubsidyPercent().data);
 		
 		super.eat(ord, rule);
 	}
