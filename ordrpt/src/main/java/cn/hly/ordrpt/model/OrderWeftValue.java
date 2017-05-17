@@ -63,20 +63,12 @@ public class OrderWeftValue extends BaseValue{
 			row.createCell(7).setCellValue(childrenSum);
 		}
 		row.createCell(8).setCellValue(roomNightSum);
-		Double tmp1 = getSubsidySum(this.orderId);
-		if(null != tmp1){
-			row.createCell(9).setCellValue(tmp1);
-		}
-		
+		row.createCell(9).setCellValue(getSubsidySum(this.orderId));
 		Float tmp2 = getTemaiPercent(this.orderId);
 		if(null != tmp2){
 			row.createCell(10).setCellValue(tmp2);
 		}
-		
-		Double tmp3 = getTemaiSubsidySum(this.orderId);
-		if(null != tmp3){
-			row.createCell(11).setCellValue(tmp3);
-		}
+		row.createCell(11).setCellValue(getTemaiSubsidySum(this.orderId));
 		
 		row.createCell(12).setCellValue(salesPromotionAmountSum);
 		row.createCell(13).setCellValue(couponAmountSum);

@@ -77,20 +77,12 @@ public class ProductWeftValue extends BaseValue{
 		}
 		row.createCell(6).setCellValue(roomNightSum);
 		
-		Double tmp1 = getSubsidySum(this.productId);
-		if(null != tmp1){
-			row.createCell(7).setCellValue(tmp1);
-		}
-		
+		row.createCell(7).setCellValue(getSubsidySum(this.productId));
 		Float tmp2 = getCalPercent(this.productId);
 		if(null != tmp2){
 			row.createCell(8).setCellValue(tmp2);
 		}
-		
-		Double tmp3 = getTemaiSubsidySum(this.productId);
-		if(null != tmp3){
-			row.createCell(9).setCellValue(tmp3);
-		}
+		row.createCell(9).setCellValue(getTemaiSubsidySum(this.productId));
 		row.createCell(10).setCellValue(salesPromotionAmountSum);
 		row.createCell(11).setCellValue(couponAmountSum);
 		row.createCell(12).setCellValue(turnoverAmountSum);

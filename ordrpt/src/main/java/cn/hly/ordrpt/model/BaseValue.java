@@ -231,7 +231,11 @@ public class BaseValue implements Serializable{
 	 * @param weft
 	 * @return
 	 */
-	public Double getSubsidySum(Long weft) {
+	public double getSubsidySum(Long weft) {
+		Double v = subsidy.getSubsidy(weft);
+		if(null == v){
+			return 0;
+		}
 		return subsidy.getSubsidy(weft);
 	}
 	/**
@@ -239,7 +243,11 @@ public class BaseValue implements Serializable{
 	 * @param weft
 	 * @return
 	 */
-	public Double getTemaiSubsidySum(Long weft){
+	public double getTemaiSubsidySum(Long weft){
+		Double v = subsidy.getTemaiSubsidy(weft);
+		if(null == v){
+			return 0;
+		}
 		return subsidy.getTemaiSubsidy(weft);
 	}
 	/**
