@@ -10,6 +10,8 @@ public class SumModel {
 	
 	private int roomNightSum;
 	
+	private int orderCount;
+	
 	private double subsidyAmountSum;
 	
 	private double temaiSubsidyAmountSum;
@@ -24,6 +26,9 @@ public class SumModel {
 
 	
 	public void writeSum(Row row, int cellStart){
+		if(orderCount > 0){
+			row.createCell(cellStart-1).setCellValue(orderCount);
+		}
 		row.createCell(cellStart+0).setCellValue(adultSum);
 		row.createCell(cellStart+1).setCellValue(childrenSum);
 		row.createCell(cellStart+2).setCellValue(roomNightSum);
@@ -60,6 +65,16 @@ public class SumModel {
 		return roomNightSum;
 	}
 
+	public int getOrderCount() {
+		return orderCount;
+	}
+	
+	public void addOrderCount(Integer count){
+		if(null != count){
+			this.orderCount += count;
+		}
+	}
+	
 	public void addRoomNightSum(Integer roomNight) {
 		if(null != roomNight){
 			this.roomNightSum += roomNight.intValue();

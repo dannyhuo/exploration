@@ -52,6 +52,9 @@ public class BaseValue implements Serializable{
 	 * @return
 	 */
 	protected double calSubsidy(OrdModel ord, RuleModel rule){
+		if(null == rule.getSubsidyType().data){
+			return 0;//如果补贴类型为空，则补贴计为0
+		}
 		if(Canstant.SUBSIDY_TYPE.BY_AUDIT.getValue() == 
 				rule.getSubsidyType().data.shortValue()){
 			Integer adult = ord.getAdult().data;

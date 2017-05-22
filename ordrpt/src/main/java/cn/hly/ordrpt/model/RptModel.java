@@ -130,7 +130,7 @@ public class RptModel {
 			}
 			
 			//写合计行
-			rptGrpByProdSum.writeSum(prdSheet.createRow(i+1), 4);
+			rptGrpByProdSum.writeSum(prdSheet.createRow(i+1), 5);
 		}
 		
 		//写入文件流
@@ -171,7 +171,8 @@ public class RptModel {
 		}
 		sumModel.addSubsidyAmountSum(value.getSubsidySum(value.getProductId()));
 		sumModel.addTemaiSubsidyAmountSum(value.getTemaiSubsidySum(value.getProductId()));
-
+		sumModel.addOrderCount(value.getOrderIds().size());
+		
 		this.sum(sumModel, value);
 	}
 	
@@ -213,16 +214,17 @@ public class RptModel {
 		createHeadCell(row, 1).setCellValue("打包产品ID");
 		createHeadCell(row, 2).setCellValue("商品ID");
 		createHeadCell(row, 3).setCellValue("订单号");
-		createHeadCell(row, 4).setCellValue("成人数");
-		createHeadCell(row, 5).setCellValue("儿童数");
-		createHeadCell(row, 6).setCellValue("间夜数");
-		createHeadCell(row, 7).setCellValue("补贴金额");
-		createHeadCell(row, 8).setCellValue("特卖补贴占比");
-		createHeadCell(row, 9).setCellValue("特卖补贴");
-		createHeadCell(row, 10).setCellValue("促销金额");
-		createHeadCell(row, 11).setCellValue("优惠券金额");
-		createHeadCell(row, 12).setCellValue("营业额");
-		createHeadCell(row, 13).setCellValue("毛利");
+		createHeadCell(row, 4).setCellValue("订单数量");
+		createHeadCell(row, 5).setCellValue("成人数");
+		createHeadCell(row, 6).setCellValue("儿童数");
+		createHeadCell(row, 7).setCellValue("间夜数");
+		createHeadCell(row, 8).setCellValue("补贴金额");
+		createHeadCell(row, 9).setCellValue("特卖补贴占比");
+		createHeadCell(row, 10).setCellValue("特卖补贴");
+		createHeadCell(row, 11).setCellValue("促销金额");
+		createHeadCell(row, 12).setCellValue("优惠券金额");
+		createHeadCell(row, 13).setCellValue("营业额");
+		createHeadCell(row, 14).setCellValue("毛利");
 	}
 	
 	/**

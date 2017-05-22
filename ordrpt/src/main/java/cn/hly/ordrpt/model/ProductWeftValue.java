@@ -55,6 +55,8 @@ public class ProductWeftValue extends BaseValue{
 		
 		this.addSubsidyAmount(ord.getProductId().data, calSubsidy(ord, rule), rule.getSubsidyPercent().data);
 		
+		this.putAdult(ord.getOrderId().data, ord.getAdult().data);
+		this.putChildren(ord.getOrderId().data, ord.getChildren().data);
 		super.eat(ord, rule);
 	}
 	
@@ -68,25 +70,26 @@ public class ProductWeftValue extends BaseValue{
 		row.createCell(1).setCellValue(productId);
 		row.createCell(2).setCellValue(getGoodsIdsStr());
 		row.createCell(3).setCellValue(getOrderIdsStr());
+		row.createCell(4).setCellValue(getOrderIds().size());
 		if("线路".equals(goodsType)){
-			row.createCell(4).setCellValue(getTktAdultSumAvg());
-			row.createCell(5).setCellValue(getTktChildrenSumAvg());
+			row.createCell(5).setCellValue(getTktAdultSumAvg());
+			row.createCell(6).setCellValue(getTktChildrenSumAvg());
 		}else{
-			row.createCell(4).setCellValue(auditSum);
-			row.createCell(5).setCellValue(childrenSum);
+			row.createCell(5).setCellValue(auditSum);
+			row.createCell(6).setCellValue(childrenSum);
 		}
-		row.createCell(6).setCellValue(roomNightSum);
+		row.createCell(7).setCellValue(roomNightSum);
 		
-		row.createCell(7).setCellValue(getSubsidySum(this.productId));
+		row.createCell(8).setCellValue(getSubsidySum(this.productId));
 		Float tmp2 = getCalPercent(this.productId);
 		if(null != tmp2){
-			row.createCell(8).setCellValue(tmp2);
+			row.createCell(9).setCellValue(tmp2);
 		}
-		row.createCell(9).setCellValue(getTemaiSubsidySum(this.productId));
-		row.createCell(10).setCellValue(salesPromotionAmountSum);
-		row.createCell(11).setCellValue(couponAmountSum);
-		row.createCell(12).setCellValue(turnoverAmountSum);
-		row.createCell(13).setCellValue(grossMarginSum);
+		row.createCell(10).setCellValue(getTemaiSubsidySum(this.productId));
+		row.createCell(11).setCellValue(salesPromotionAmountSum);
+		row.createCell(12).setCellValue(couponAmountSum);
+		row.createCell(13).setCellValue(turnoverAmountSum);
+		row.createCell(14).setCellValue(grossMarginSum);
 	}
 	
 	

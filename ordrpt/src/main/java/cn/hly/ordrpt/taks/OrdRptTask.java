@@ -171,7 +171,9 @@ public class OrdRptTask extends Thread{
 				}
 			}
 			
-			if(!ruleModel.getProductId().data.equals(ordModel.getProductId().data)){
+			
+			if(null != ruleModel.getProductId().data && 
+					!ruleModel.getProductId().data.equals(ordModel.getProductId().data)){
 				return ;//不是此产品下的商品
 			}
 			
