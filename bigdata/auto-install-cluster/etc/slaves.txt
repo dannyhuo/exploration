@@ -1,0 +1,3 @@
+crm-slave1
+crm-slave2
+crm-slave3

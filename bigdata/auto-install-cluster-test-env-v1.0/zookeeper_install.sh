@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 
-#zookeeperºÍscalaÑ¹Ëõ°üÃû³Æ
+#zookeeperå’Œscalaå‹ç¼©åŒ…åç§°
 declare zookeeper_tar=/home/hadoop/upload/zookeeper-3.4.5-cdh5.10.0.tar.gz
 
-#½âÑ¹ËõºóµÄÃû³Æ
+#è§£å‹ç¼©åçš„åç§°
 declare zookeeper_version=zookeeper-3.4.5-cdh5.10.0
 
-#Ö¸¶¨ÈíÁ´½ÓÃû³Æ
+#æŒ‡å®šè½¯é“¾æ¥åç§°
 declare zookeeper_ln=/home/hadoop/app/zookeeper
 
-#°²×°µ½Ö¸¶¨Ä¿Â¼
+#å®‰è£…åˆ°æŒ‡å®šç›®å½•
 declare zookeeper_install_dir=/home/hadoop/app/cdh5.10.0
 
-#»·¾³±äÁ¿shÃû
+#ç¯å¢ƒå˜é‡shå
 declare zookeeper_env=/etc/profile.d/zookeeper_env.sh
 
 
-##×Ô¶¨Òå¹¦ÄÜº¯Êı²¿·Östart#####################################################################################################
-#Ô¤¼ì²é
+##è‡ªå®šä¹‰åŠŸèƒ½å‡½æ•°éƒ¨åˆ†start#####################################################################################################
+#é¢„æ£€æŸ¥
 function fun_prepare(){
-	#1¡¢ÅĞ¶ÏzookeeperÑ¹Ëõ°üÊÇ·ñ´æÔÚ
+	#1ã€åˆ¤æ–­zookeeperå‹ç¼©åŒ…æ˜¯å¦å­˜åœ¨
 	if [ ! -e $zookeeper_tar ]; then
 		echo "fun_prepare(): the zookeeper tar file($zookeeper_tar) not found, exit!"
 		return 0
 	fi
 	
-	#2/¡¢ÅĞ¶ÏÈíÁ´½ÓÊÇ·ñ´æÔÚ
+	#2/ã€åˆ¤æ–­è½¯é“¾æ¥æ˜¯å¦å­˜åœ¨
 	if [ -d $zookeeper_version ]; then
 		echo "fun_prepare(): the ln file($zookeeper_version) exists, exit!"
 		return 0
@@ -35,62 +35,89 @@ function fun_prepare(){
 }
 
 
-#´´½¨ÈíÁ´½Ó
+#åˆ›å»ºè½¯é“¾æ¥
 function fun_crt_sln(){
 	local sr=$1
 	local ln=$2
 
-	#ÅĞ¶ÏÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
 	if [ ! -e $sr -a ! -d $sr ]; then
 		echo "fun_crt_sln(): $sr is not a file or a directory, the arguments is invalid!"
 		return 0
 	fi
 
-	#ÅĞ¶ÏÈíÁ´½ÓÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­è½¯é“¾æ¥æ˜¯å¦å­˜åœ¨
 	if [ -e $ln -o -d $ln ]; then
 		echo "fun_crt_sln(): $ln is exits, create slink failed!"
 		return 0
 	fi
 
-	#´´½¨ÈíÁ´½Ó
+	#åˆ›å»ºè½¯é“¾æ¥
 	ln -s $sr $ln
 
 	return 1
 }
 
-#½âÑ¹µ½Ö¸¶¨µØ·½
+#è§£å‹åˆ°æŒ‡å®šåœ°æ–¹
 function fun_un_cmprs(){
 	local sr=$1
 	local tgt=$2
 	
-	#ÅĞ¶ÏÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
 	if [ ! -e $sr -a ! -d $sr ]; then
 		echo "fun_un_cmprs(): $sr is not exists, uncompressing it failed!"
 		return 0
 	fi
 	
-	#ÅĞ¶ÏÖ¸¶¨½âÑ¹µÄÎ»ÖÃÊÇ·ñÊÇ¸öÎÄ¼ş , ²»ÊÇÄ¿Â¼¸ø³öÌáÊ¾
+	#åˆ¤æ–­æŒ‡å®šè§£å‹çš„ä½ç½®æ˜¯å¦æ˜¯ä¸ªæ–‡ä»¶ , ä¸æ˜¯ç›®å½•ç»™å‡ºæç¤º
 	if [ ! -e $tgt ]; then
 		echo "fun_un_cmprs(): the destination you want to uncompres is an file, uncompresing failed!"
 		return 0
 	fi
 	
-	#Èç¹ûÄ¿±êÄ¿Â¼²»´æÔÚ£¬Ôò´´½¨
+	#å¦‚æœç›®æ ‡ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ™åˆ›å»º
 	if [ ! -d $tgt ]; then
 		mkdir -p $tgt
 	fi
 	
-	#½âÑ¹
+	#è§£å‹
 	tar -zxf $sr -C $tgt
 	
 	return 1
 }
 
-##×Ô¶¨Òå¹¦ÄÜº¯Êı²¿·Öend#####################################################################################################
+##è‡ªå®šä¹‰åŠŸèƒ½å‡½æ•°éƒ¨åˆ†end#####################################################################################################
 
-#Êä³ö»·¾³±äÁ¿
+function gener_myid(){
+        local host=$(hostname)
+        local zoocfg="$zookeeper_install_dir/$zookeeper_version/conf/zoo.cfg"
+        local line=$(cat $zoocfg | grep $host)
+        local left=${line%=*}
+        local myid=${left#*.}
+
+        local dd_line=$(cat $zoocfg | grep 'dataDir=')
+        local dataDir=${dd_line#*=}
+
+        if [ ! -d $dataDir ]; then
+		mkdir -p $dataDir
+        fi
+	
+        echo "create myid in folder $dataDir, myid is $myid"
+        sh -c "echo $myid > $dataDir/myid"
+
+	#create data log directory
+	local dd_line=$(cat $zoocfg | grep 'dataLogDir=')
+        local dataLogDir=${dd_line#*=}
+
+        if [ ! -d $dataLogDir ]; then
+                mkdir -p $dataLogDir
+        fi
+
+}
+
+#è¾“å‡ºç¯å¢ƒå˜é‡
 function out_env(){
-	#ÅäÖÃjava»·¾³±äÁ¿
+	#é…ç½®javaç¯å¢ƒå˜é‡
 	echo "build zookeeper envirement in file $zookeeper_env"
 	
 	local zk_tmp=.zk_tmp.sh
@@ -106,17 +133,17 @@ function out_env(){
 	source /etc/profile
 }
 
-#°²×°zookeeperºÍscala
+#å®‰è£…zookeeperå’Œscala
 function install_zookeeper(){
-	local cond_dir=$1
+	local conf_dir=$1
 	
-	#°²×°Ç°¼ì²é
+	#å®‰è£…å‰æ£€æŸ¥
 	fun_prepare
 	if [ $? -lt 1 ]; then
 		return
 	fi
 
-	#½âÑ¹
+	#è§£å‹
 	echo "uncompresing $zookeeper_tar"
 	fun_un_cmprs $zookeeper_tar $zookeeper_install_dir
 	if [ $? -lt 1 ]; then
@@ -124,7 +151,7 @@ function install_zookeeper(){
 		return
 	fi
 	
-	#´´½¨ÈíÁ´½Ó
+	#åˆ›å»ºè½¯é“¾æ¥
 	cd $zookeeper_install_dir
 	fun_crt_sln "$zookeeper_install_dir/$zookeeper_version" $zookeeper_ln
 	
@@ -135,6 +162,11 @@ function install_zookeeper(){
 		echo "scp the conf to the dir $zookeeper_install_dir/$zookeeper_version/conf/ from $conf_dir"
 		scp "$conf_dir/*" "$zookeeper_install_dir/$zookeeper_version/conf/"
 	fi
+
+	gener_myid
+
+	echo "starting zookeeper..........................."
+	$zookeeper_install_dir/$zookeeper_version/bin/zkServer.sh start
 }
 
 install_zookeeper $1

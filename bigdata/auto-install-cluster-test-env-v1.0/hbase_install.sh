@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 
-#hbaseºÍscalaÑ¹Ëõ°üÃû³Æ
-declare hbase_tar=/home/hadoop/app/hbase-1.2.0-cdh5.10.0.tar.gz
+#hbaseå’Œscalaå‹ç¼©åŒ…åç§°
+declare hbase_tar=/home/hadoop/upload/hbase-1.2.0-cdh5.10.0.tar.gz
 
-#½âÑ¹ËõºóµÄÃû³Æ
+#è§£å‹ç¼©åçš„åç§°
 declare hbase_version=hbase-1.2.0-cdh5.10.0
 
-#Ö¸¶¨ÈíÁ´½ÓÃû³Æ
+#æŒ‡å®šè½¯é“¾æ¥åç§°
 declare hbase_ln=/home/hadoop/app/hbase
 
-#°²×°µ½Ö¸¶¨Ä¿Â¼
+#å®‰è£…åˆ°æŒ‡å®šç›®å½•
 declare hbase_install_dir=/home/hadoop/app/cdh5.10.0
 
-#»·¾³±äÁ¿shÃû
+#ç¯å¢ƒå˜é‡shå
 declare hbase_env=/etc/profile.d/hbase_env.sh
 
 
-##×Ô¶¨Òå¹¦ÄÜº¯Êı²¿·Östart#####################################################################################################
-#Ô¤¼ì²é
+##è‡ªå®šä¹‰åŠŸèƒ½å‡½æ•°éƒ¨åˆ†start#####################################################################################################
+#é¢„æ£€æŸ¥
 function fun_prepare(){
-	#1¡¢ÅĞ¶ÏhbaseÑ¹Ëõ°üÊÇ·ñ´æÔÚ
+	#1ã€åˆ¤æ–­hbaseå‹ç¼©åŒ…æ˜¯å¦å­˜åœ¨
 	if [ ! -e $hbase_tar ]; then
 		echo "fun_prepare(): the hbase tar file($hbase_tar) not found, exit!"
 		return 0
 	fi
 	
-	#2/¡¢ÅĞ¶ÏÈíÁ´½ÓÊÇ·ñ´æÔÚ
+	#2/ã€åˆ¤æ–­è½¯é“¾æ¥æ˜¯å¦å­˜åœ¨
 	if [ -d $hbase_version ]; then
 		echo "fun_prepare(): the ln file($hbase_version) exists, exit!"
 		return 0
@@ -35,62 +35,62 @@ function fun_prepare(){
 }
 
 
-#´´½¨ÈíÁ´½Ó
+#åˆ›å»ºè½¯é“¾æ¥
 function fun_crt_sln(){
 	local sr=$1
 	local ln=$2
 
-	#ÅĞ¶ÏÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
 	if [ ! -e $sr -a ! -d $sr ]; then
 		echo "fun_crt_sln(): $sr is not a file or a directory, the arguments is invalid!"
 		return 0
 	fi
 
-	#ÅĞ¶ÏÈíÁ´½ÓÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­è½¯é“¾æ¥æ˜¯å¦å­˜åœ¨
 	if [ -e $ln -o -d $ln ]; then
 		echo "fun_crt_sln(): $ln is exits, create slink failed!"
 		return 0
 	fi
 
-	#´´½¨ÈíÁ´½Ó
+	#åˆ›å»ºè½¯é“¾æ¥
 	ln -s $sr $ln
 
 	return 1
 }
 
-#½âÑ¹µ½Ö¸¶¨µØ·½
+#è§£å‹åˆ°æŒ‡å®šåœ°æ–¹
 function fun_un_cmprs(){
 	local sr=$1
 	local tgt=$2
 	
-	#ÅĞ¶ÏÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
 	if [ ! -e $sr -a ! -d $sr ]; then
 		echo "fun_un_cmprs(): $sr is not exists, uncompressing it failed!"
 		return 0
 	fi
 	
-	#ÅĞ¶ÏÖ¸¶¨½âÑ¹µÄÎ»ÖÃÊÇ·ñÊÇ¸öÎÄ¼ş , ²»ÊÇÄ¿Â¼¸ø³öÌáÊ¾
+	#åˆ¤æ–­æŒ‡å®šè§£å‹çš„ä½ç½®æ˜¯å¦æ˜¯ä¸ªæ–‡ä»¶ , ä¸æ˜¯ç›®å½•ç»™å‡ºæç¤º
 	if [ ! -e $tgt ]; then
 		echo "fun_un_cmprs(): the destination you want to uncompres is an file, uncompresing failed!"
 		return 0
 	fi
 	
-	#Èç¹ûÄ¿±êÄ¿Â¼²»´æÔÚ£¬Ôò´´½¨
+	#å¦‚æœç›®æ ‡ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ™åˆ›å»º
 	if [ ! -d $tgt ]; then
 		mkdir -p $tgt
 	fi
 	
-	#½âÑ¹
+	#è§£å‹
 	tar -zxf $sr -C $tgt
 	
 	return 1
 }
 
-##×Ô¶¨Òå¹¦ÄÜº¯Êı²¿·Öend#####################################################################################################
+##è‡ªå®šä¹‰åŠŸèƒ½å‡½æ•°éƒ¨åˆ†end#####################################################################################################
 
-#Êä³ö»·¾³±äÁ¿
+#è¾“å‡ºç¯å¢ƒå˜é‡
 function out_env(){
-	#ÅäÖÃjava»·¾³±äÁ¿
+	#é…ç½®javaç¯å¢ƒå˜é‡
 	echo "build hbase envirement in file $hbase_env"
 	local hbase_tmp=.hbase_tmp.sh
 	echo "#!/bin/sh" > $hbase_tmp
@@ -105,15 +105,17 @@ function out_env(){
 	source /etc/profile
 }
 
-#°²×°hbaseºÍscala
+#å®‰è£…hbaseå’Œscala
 function install_hbase(){
-	#°²×°Ç°¼ì²é
+	local conf_dir=$1
+
+	#å®‰è£…å‰æ£€æŸ¥
 	fun_prepare
 	if [ $? -lt 1 ]; then
 		return
 	fi
 
-	#½âÑ¹
+	#è§£å‹
 	echo "uncompresing $hbase_tar"
 	fun_un_cmprs $hbase_tar $hbase_install_dir
 	if [ $? -lt 1 ]; then
@@ -121,11 +123,18 @@ function install_hbase(){
 		return
 	fi
 	
-	#´´½¨ÈíÁ´½Ó
+	#åˆ›å»ºè½¯é“¾æ¥
 	cd $hbase_install_dir
 	fun_crt_sln "$hbase_install_dir/$hbase_version" $hbase_ln
 	
 	out_env
+
+	echo "the conf parameter is $conf_dir."
+        if [ -n "$conf_dir" ]; then
+                echo "scp the conf to the dir $hbase_install_dir/$hbase_version/conf from $conf_dir"
+                scp "$conf_dir/*" "$hbase_install_dir/$hbase_version/conf/"
+        fi
+
 }
 
-install_hbase
+install_hbase $1

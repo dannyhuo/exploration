@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 
-#sparkºÍscalaÑ¹Ëõ°üÃû³Æ
+#sparkå’Œscalaå‹ç¼©åŒ…åç§°
 declare spark_tar=/home/hadoop/upload/spark-2.1.0-bin-hadoop2.6.tgz
 
-#½âÑ¹ËõºóµÄÃû³Æ
+#è§£å‹ç¼©åçš„åç§°
 declare spark_version=spark-2.1.0-bin-hadoop2.6
 
-#Ö¸¶¨ÈíÁ´½ÓÃû³Æ
+#æŒ‡å®šè½¯é“¾æ¥åç§°
 declare spark_ln=/home/hadoop/app/spark
 
-#°²×°µ½Ö¸¶¨Ä¿Â¼
+#å®‰è£…åˆ°æŒ‡å®šç›®å½•
 declare spark_install_dir=/home/hadoop/app/cdh5.10.0
 
-#»·¾³±äÁ¿shÃû
+#ç¯å¢ƒå˜é‡shå
 declare spark_env=/etc/profile.d/spark_env.sh
 
 
-##×Ô¶¨Òå¹¦ÄÜº¯Êı²¿·Östart#####################################################################################################
-#Ô¤¼ì²é
+##è‡ªå®šä¹‰åŠŸèƒ½å‡½æ•°éƒ¨åˆ†start#####################################################################################################
+#é¢„æ£€æŸ¥
 function fun_prepare(){
-	#1¡¢ÅĞ¶ÏsparkÑ¹Ëõ°üÊÇ·ñ´æÔÚ
+	#1ã€åˆ¤æ–­sparkå‹ç¼©åŒ…æ˜¯å¦å­˜åœ¨
 	if [ ! -e $spark_tar ]; then
 		echo "fun_prepare(): the spark tar file($spark_tar) not found, exit!"
 		return 0
 	fi
 	
-	#2/¡¢ÅĞ¶ÏÈíÁ´½ÓÊÇ·ñ´æÔÚ
+	#2/ã€åˆ¤æ–­è½¯é“¾æ¥æ˜¯å¦å­˜åœ¨
 	if [ -d $spark_version ]; then
 		echo "fun_prepare(): the ln file($spark_version) exists, exit!"
 		return 0
@@ -35,62 +35,62 @@ function fun_prepare(){
 }
 
 
-#´´½¨ÈíÁ´½Ó
+#åˆ›å»ºè½¯é“¾æ¥
 function fun_crt_sln(){
 	local sr=$1
 	local ln=$2
 
-	#ÅĞ¶ÏÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
 	if [ ! -e $sr -a ! -d $sr ]; then
 		echo "fun_crt_sln(): $sr is not a file or a directory, the arguments is invalid!"
 		return 0
 	fi
 
-	#ÅĞ¶ÏÈíÁ´½ÓÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­è½¯é“¾æ¥æ˜¯å¦å­˜åœ¨
 	if [ -e $ln -o -d $ln ]; then
 		echo "fun_crt_sln(): $ln is exits, create slink failed!"
 		return 0
 	fi
 
-	#´´½¨ÈíÁ´½Ó
+	#åˆ›å»ºè½¯é“¾æ¥
 	ln -s $sr $ln
 
 	return 1
 }
 
-#½âÑ¹µ½Ö¸¶¨µØ·½
+#è§£å‹åˆ°æŒ‡å®šåœ°æ–¹
 function fun_un_cmprs(){
 	local sr=$1
 	local tgt=$2
 	
-	#ÅĞ¶ÏÔ´ÎÄ¼şÊÇ·ñ´æÔÚ
+	#åˆ¤æ–­æºæ–‡ä»¶æ˜¯å¦å­˜åœ¨
 	if [ ! -e $sr -a ! -d $sr ]; then
 		echo "fun_un_cmprs(): $sr is not exists, uncompressing it failed!"
 		return 0
 	fi
 	
-	#ÅĞ¶ÏÖ¸¶¨½âÑ¹µÄÎ»ÖÃÊÇ·ñÊÇ¸öÎÄ¼ş , ²»ÊÇÄ¿Â¼¸ø³öÌáÊ¾
+	#åˆ¤æ–­æŒ‡å®šè§£å‹çš„ä½ç½®æ˜¯å¦æ˜¯ä¸ªæ–‡ä»¶ , ä¸æ˜¯ç›®å½•ç»™å‡ºæç¤º
 	if [ ! -e $tgt ]; then
 		echo "fun_un_cmprs(): the destination you want to uncompres is an file, uncompresing failed!"
 		return 0
 	fi
 	
-	#Èç¹ûÄ¿±êÄ¿Â¼²»´æÔÚ£¬Ôò´´½¨
+	#å¦‚æœç›®æ ‡ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ™åˆ›å»º
 	if [ ! -d $tgt ]; then
 		mkdir -p $tgt
 	fi
 	
-	#½âÑ¹
+	#è§£å‹
 	tar -zxf $sr -C $tgt
 	
 	return 1
 }
 
-##×Ô¶¨Òå¹¦ÄÜº¯Êı²¿·Öend#####################################################################################################
+##è‡ªå®šä¹‰åŠŸèƒ½å‡½æ•°éƒ¨åˆ†end#####################################################################################################
 
-#Êä³ö»·¾³±äÁ¿
+#è¾“å‡ºç¯å¢ƒå˜é‡
 function out_env(){
-	#ÅäÖÃjava»·¾³±äÁ¿
+	#é…ç½®javaç¯å¢ƒå˜é‡
 	echo "build spark envirement in file $spark_env"
 	local spark_tmp=.spark_tmp.sh
 	echo "#!/bin/sh" > $spark_tmp
@@ -104,15 +104,17 @@ function out_env(){
 	source /etc/profile
 }
 
-#°²×°sparkºÍscala
+#å®‰è£…sparkå’Œscala
 function install_spark(){
-	#°²×°Ç°¼ì²é
+	local conf_dir=$1
+
+	#å®‰è£…å‰æ£€æŸ¥
 	fun_prepare
 	if [ $? -lt 1 ]; then
 		return
 	fi
 
-	#½âÑ¹
+	#è§£å‹
 	echo "uncompresing $spark_tar"
 	fun_un_cmprs $spark_tar $spark_install_dir
 	if [ $? -lt 1 ]; then
@@ -120,11 +122,18 @@ function install_spark(){
 		return
 	fi
 	
-	#´´½¨ÈíÁ´½Ó
+	#åˆ›å»ºè½¯é“¾æ¥
 	cd $spark_install_dir
 	fun_crt_sln "$spark_install_dir/$spark_version" $spark_ln
 	
 	out_env
+
+	echo "the conf parameter is $conf_dir."
+        if [ -n "$conf_dir" ]; then
+                echo "scp the conf to the dir $spark_install_dir/$spark_version/conf from $conf_dir"
+                scp "$conf_dir/*" "$spark_install_dir/$spark_version/conf/"
+        fi
+
 }
 
-install_spark
+install_spark $1

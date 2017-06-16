@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 #jdk和scala压缩包名称
-declare jdk_tar=/home/hadoop/jdk-8u131-linux-x64.tar.gz
-declare scala_tar=/home/hadoop/scala-2.12.2.tgz
+declare jdk_tar=/home/hadoop/upload/jdk-8u131-linux-x64.tar.gz
+declare scala_tar=/home/hadoop/upload/scala-2.12.2.tgz
 
 #解压缩后的名称
 declare jdk_version=jdk1.8.0_131

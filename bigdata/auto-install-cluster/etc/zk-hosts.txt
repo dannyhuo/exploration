@@ -1,0 +1,3 @@
+crm-master2
+crm-slave1
+crm-slave2
