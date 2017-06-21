@@ -9,7 +9,9 @@ declare to_location
 
 declare cluster_cmd
 
-declare cluster_conf="./etc/cluster-hosts"
+declare sh_parent_dir=$(dirname $0)
+
+declare cluster_conf="$sh_parent_dir/etc/cluster-hosts"
 
 declare cluster_hosts
 
@@ -18,8 +20,8 @@ function print_help(){
 	echo -e "the shell $1, for help as follows:"
 	echo -e "\t-h | --help: print the helper for you"
 	
-	echo -e "\t-s | -source: point the source that you want cope to target directory, is a file or directory"
-	echo -e "\t-t | -target: point the target that you want cope to, it's a directory"
+	echo -e "\t-s | -source: point the source that you want upload to target directory for each host, is a file or directory"
+	echo -e "\t-t | -target: point the target that you want sync to at each host, it's a directory"
 	
 	echo -e "\t-dh : download host, the download host, is a host or ip address"
 	echo -e "\t-ds : download source path, the directory or file on the remote host, witch point by the -lh option!"
@@ -43,17 +45,17 @@ while test -n "$1"; do
 			if [ -a $2 ]; then
 				source=$2
 			else
-				echo "the -s or -source option must be point a file or directory!"
+				echo "the -s or -source option must be point a file or directory, you give the path '$2' not a directory!"
 				exit $ST_OK
 			fi
 			shift
 		;;
 		
 		-t | -target)
-			if [ -d $2 ]; then
+			if [ -n $2 ]; then
 				target_dir=$2
 			else
-				echo "the -t or -target must be an exists directory!"
+				echo "you must point the target directory by options -t or -target!"
 				exit $ST_OK
 			fi
 			shift
@@ -124,36 +126,37 @@ done
 function main(){
 	
 	if [ ! -f $cluster_conf ]; then
-		echo "you must point the cluster host by -cf or write in ./etc/cluster-hosts file."
+		echo "you must point the cluster hosts by -cf or write in default './etc/cluster-hosts file'."
 		exit $ST_ERR
 	fi
 	
-	
+	#上传
 	if ! test -z $source  && ! test -z $target_dir 
 	then
-		echo "will sync the path '$source' to the directory '$target_dir'"
-		while read host
+		local hosts_read_from_conf=`cat $cluster_conf`
+		for host in $hosts_read_from_conf
 		do
+			echo "will sync the path '$source' to the directory '$target_dir' at host of '$host'"
 			scp -r $source $host:$target_dir 
-		done < $cluster_conf
+		done
 	fi
 
+	#下载
 	if test -n "$download_host" && test -n "$download_source"  && test -n "$to_location"
 	then
 		echo "will download from '$download_host:$download_source' to '$to_location'! "
-		while read host
-		do
-			scp -r $download_host:$download_source $to_location
-		done < $cluster_conf
+		scp -r $download_host:$download_source $to_location
 	fi
 
+	#同步执行命令
 	if test -n "$cluster_cmd"
 	then
 		echo "will exec the command '$cluster_cmd' on cluster!"
-		while read host
+		local hosts=`cat $cluster_conf`
+		for host in $hosts
 		do
 			ssh -t $host $cluster_cmd
-		done < $cluster_conf
+		done
 	fi
 }
 
