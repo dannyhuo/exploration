@@ -11,7 +11,7 @@ declare cluster_cmd
 
 declare sh_parent_dir=$(dirname $0)
 
-declare cluster_conf="$sh_parent_dir/etc/cluster-hosts"
+declare cluster_conf="$sh_parent_dir/etc/hadoop-hosts"
 
 declare cluster_hosts
 
@@ -29,7 +29,7 @@ function print_help(){
 	
 	echo -e "\t-c : to point the command that will exec on each machine of the cluster!"
 	
-	echo -e "\t-cf: to point the path of cluster hosts config file. default at ./etc/cluster-hosts!"
+	echo -e "\t-cf: to point the path of cluster hosts config file. default at ./etc/hadoop-hosts!"
 }
 
 #循环处理参数，入口
@@ -126,7 +126,7 @@ done
 function main(){
 	
 	if [ ! -f $cluster_conf ]; then
-		echo "you must point the cluster hosts by -cf or write in default './etc/cluster-hosts file'."
+		echo "you must point the cluster hosts by -cf or write in default './etc/hadoop-hosts file'."
 		exit $ST_ERR
 	fi
 	
@@ -151,7 +151,7 @@ function main(){
 	#同步执行命令
 	if test -n "$cluster_cmd"
 	then
-		echo "will exec the command '$cluster_cmd' on cluster!"
+		echo "will exec the command '$cluster_cmd' on cluster of $cluster_conf!"
 		local hosts=`cat $cluster_conf`
 		for host in $hosts
 		do

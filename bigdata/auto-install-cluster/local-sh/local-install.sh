@@ -28,6 +28,15 @@ declare FAILED=1
 
 ##自定义功能函数部分start#####################################################################################################
 #预检查
+function clean_tmp(){
+	if [ -f "$downloaded_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag" ]; then
+		rm -rf $downloaded_tmp_dir
+	elif [ "$is_tar_file_download" == "true" ]; then
+		echo "the install tar file at '$tar_file' is downloaded, install finished will rm it."
+		rm -f $tar_file
+	fi
+}
+
 function fun_prepare(){
 	
 	#1、判断是否指定了安装目录
@@ -61,13 +70,14 @@ function fun_prepare(){
 				tar_file=$tar_parth
 				app_version=$(tar -tf $tar_file | awk -F "/" '{print $1}' | sed -n '1p')
 			else
+				#创建临时目录，用于存放远程下载下来的安装包
 				if [ ! -d $downloaded_tmp_dir ]; then
 					mkdir $downloaded_tmp_dir
 					echo "1" $downloaded_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag
 					is_mked_tmp_dir=$OK
 				fi
 				
-				#远程tar file， 下载到本地
+				#将远程tar file， 下载到本地
 				scp $tar_url $downloaded_tmp_dir
 				if [ $? -ne 0 ]; then
 					echo "the tar file not exist at the url : $tar_url"
@@ -103,7 +113,7 @@ function fun_prepare(){
 			if [ $is_mked_tmp_dir -eq $OK ]; then
 				rm -rf $downloaded_tmp_dir
 			else
-				rm -f $tar_file
+				clean_tmp
 			fi
 			return $FAILED
 		fi
@@ -207,10 +217,10 @@ function fun_install(){
 	if test -n "$installed_ln"; then
 		if [ -d $installed_ln ]; then
 			local ln_tmp=$installed_ln/$type
-			echo "install(): you point the link dir is $installed_ln, the link file will be $ln_tmp"
+			echo "install(): you point the link dir is '$installed_ln', the link file will be '$ln_tmp' created."
 			installed_ln=$ln_tmp
 		else
-			echo "install(): you point the soft link path is $installed_ln"
+			echo "install(): you point the soft link path is '$installed_ln'"
 		fi
 		fun_crt_sln "$install_dir/$app_version" $installed_ln
 	fi
@@ -226,7 +236,7 @@ function fun_install(){
 				echo "install(): download the config file failed from the url of '$conf_dir', you should sync manual"
 			fi
 		else
-			echo "install(): scp the conf to the dir $install_dir/$app_version/conf/ from $conf_dir"
+			echo "install(): scp the conf to the dir '$install_dir/$app_version/conf/' from '$conf_dir'"
 			scp "$conf_dir/*" "$install_dir/$app_version/conf/"
 			if [ $? -ne $OK ]; then
 				conf_load_ok=$OK
@@ -237,11 +247,7 @@ function fun_install(){
 	
 	#5、安装完毕，清理文件
 	echo "install(): install finished, clearing the tmp file and jar file........................................"
-	if [ -f "$downloaded_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag" ]; then
-		rm -rf $downloaded_tmp_dir
-	elif [ "$is_tar_file_download" == "true" ]; then
-		rm -f $tar_file
-	fi
+	clean_tmp
 }
 
 ##自定义功能函数部分end#####################################################################################################
@@ -250,7 +256,7 @@ function fun_install(){
 function out_jdk_env(){
 	#配置java环境变量
 	echo "build jdk envirement in file $out_env_path"
-	local jdk_env="./.jdk_tmp.sh.tmp"
+	local jdk_env="$downloaded_tmp_dir/.jdk_tmp.sh.tmp"
 	echo "#!/bin/sh" > $jdk_env
 	echo "export JAVA_HOME=$installed_ln" >> $jdk_env
 	echo 'export PATH=$PATH:$JAVA_HOME/bin/' >> $jdk_env
@@ -272,7 +278,7 @@ function install_jdk(){
 function out_scala_env(){
 	#配置scala环境变量
 	echo "build scala envirement in file $out_env_path"
-	local scala_env="./.scala_tmp.sh.tmp"
+	local scala_env="$downloaded_tmp_dir/.scala_tmp.sh.tmp"
 	echo "export SCALA_HOME=$installed_ln" > $scala_env
 	echo 'export PATH=$PATH:$SCALA_HOME/bin' >> $scala_env
 	sudo sh -c "cat $scala_env > $out_env_path"
@@ -318,7 +324,7 @@ function gener_zk_myid(){
 function out_zk_env(){
 	#配置java环境变量
 	echo "build zookeeper envirement in file $out_env_path"
-	local zk_tmp="./.zk_tmp.sh.tmp"
+	local zk_tmp="$downloaded_tmp_dir/.zk_tmp.sh.tmp"
 	echo "#!/bin/sh" > $zk_tmp
 	echo "export ZOOKEEPER_HOME=$installed_ln" >> $zk_tmp
 	echo 'export PATH=$PATH:$ZOOKEEPER_HOME/bin' >> $zk_tmp
@@ -344,7 +350,7 @@ function install_zookeeper(){
 function out_hadoop_env(){
 	#配置java环境变量
 	echo "build hadoop envirement in file $out_env_path"
-	local hadoop_env_tmp="./.hadoop_tmp.sh.tmp"
+	local hadoop_env_tmp="$downloaded_tmp_dir/.hadoop_tmp.sh.tmp"
 	echo "#!/bin/sh" > $hadoop_env_tmp
 	echo "export HADOOP_HOME=$installed_ln" >> $hadoop_env_tmp
 	echo 'export HADOOP_PREFIX=$HADOOP_HOME' >> $hadoop_env_tmp
@@ -375,7 +381,7 @@ function install_hadoop(){
 function out_hbase_env(){
 	#配置java环境变量
 	echo "build hbase envirement in file $out_env_path"
-	local hbase_tmp="./.hbase_env_tmp.sh.tmp"
+	local hbase_tmp="$downloaded_tmp_dir/.hbase_env_tmp.sh.tmp"
 	echo "#!/bin/sh" > $hbase_tmp
 	echo "export HBASE_HOME=$installed_ln" >> $hbase_tmp
 	echo 'export PATH=$PATH:$HBASE_HOME/bin' >> $hbase_tmp
@@ -398,7 +404,7 @@ function install_hbase(){
 function out_spark_env(){
 	#配置java环境变量
 	echo "build spark envirement in file $out_env_path"
-	local spark_tmp="./.spark_env_tmp.sh.tmp"
+	local spark_tmp="$downloaded_tmp_dir/.spark_env_tmp.sh.tmp"
 	echo "#!/bin/sh" > $spark_tmp
 	echo "export SPARK_HOME=$installed_ln" >> $spark_tmp
 	echo 'export PATH=$PATH:$SPARK_HOME/sbin' >> $spark_tmp
@@ -496,7 +502,8 @@ done
 
 #安装应用主入口##############################################################################################################
 function install_main(){
-	echo "∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧"
+	echo -e "\n"
+	echo "∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧start∧∧$(hostname)∧∧$type∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧"
 	if test -z "$type"; then
 		echo "install_main(): please point the install type by -t, for what software you to install."
 		exit $ST_ERR
@@ -555,7 +562,8 @@ function install_main(){
 			echo "your type '$type' is unresolved, please point type as jdk, scala, zookeeper, hadoop, hbase, spark."
 		;;
 	esac
-	echo "∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨"
+	echo "∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨end∨∨$(hostname)∨∨$type∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨"
+	echo -e "\n"
 }
 
 install_main
