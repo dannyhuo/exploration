@@ -246,6 +246,9 @@ function clear_tmp(){
 }
 
 function install(){
+	echo -e "\n"
+	echo -e "\n"
+	
 	#1、初始化配置
 	if test -z $app; then
 		echo "you must point the app by option -a that tell shell what to install , for example jdk, scala, hadoop, zookeeper, hbase, spark. "

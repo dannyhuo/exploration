@@ -15,6 +15,9 @@ declare cluster_conf="$sh_parent_dir/etc/hadoop-hosts"
 
 declare cluster_hosts
 
+#使用sudo默认为false,可手动指定为true
+declare sudo_flag="false"
+
 #展示帮助命令
 function print_help(){
 	echo -e "the shell $1, for help as follows:"
@@ -28,6 +31,7 @@ function print_help(){
 	echo -e "\t-tl : to location, it't a local derectory to whitch you want download the remote file!"
 	
 	echo -e "\t-c : to point the command that will exec on each machine of the cluster!"
+	echo -e "\t-sudo : sudo eq true, will use sudo exec the command, the others will not use sudo!"
 	
 	echo -e "\t-cf: to point the path of cluster hosts config file. default at ./etc/hadoop-hosts!"
 }
@@ -104,6 +108,11 @@ while test -n "$1"; do
 			shift
 		;;
 		
+		-sudo)
+			sudo_flag=$2
+			shift
+		;;
+		
 		#同步执行集群命令###################################################################################
 		-cf)
 			if [ -f $2 ]; then
@@ -155,7 +164,11 @@ function main(){
 		local hosts=`cat $cluster_conf`
 		for host in $hosts
 		do
-			ssh -t $host $cluster_cmd
+			if [ "$sudo_flag" == "true" ]; then
+				ssh -t $host "sudo $cluster_cmd"
+			else
+				ssh -t $host "$cluster_cmd"
+			fi
 		done
 	fi
 }

@@ -8,7 +8,6 @@ declare conf_load_ok=1
 declare tar_url
 #存放从远程下载安装包的目录
 declare downloaded_tmp_dir=~/.tmp_cluster_auto_install_downloaded_tars
-declare is_mked_tmp_dir=1
 declare is_tar_file_download="false"
 #安装包文件
 declare tar_file
@@ -16,6 +15,7 @@ declare tar_file
 declare app_version
 #软件安装目录
 declare install_dir
+declare installed_home
 #安装软链接，可选
 declare installed_ln
 #配置文件所在目录
@@ -73,22 +73,22 @@ function fun_prepare(){
 				#创建临时目录，用于存放远程下载下来的安装包
 				if [ ! -d $downloaded_tmp_dir ]; then
 					mkdir $downloaded_tmp_dir
-					echo "1" $downloaded_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag
-					is_mked_tmp_dir=$OK
+					#在临时目录中创建一个自动创建目录的标记，安装完后删除整个目录，如果目录原来存在，只删除下载的文件
+					echo "1" > $downloaded_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag
 				fi
 				
 				#将远程tar file， 下载到本地
 				scp $tar_url $downloaded_tmp_dir
 				if [ $? -ne 0 ]; then
-					echo "the tar file not exist at the url : $tar_url"
-					if [ $is_mked_tmp_dir -eq $OK ]; then
-						rm -rf $downloaded_tmp_dir
-					fi
+					echo "the tar file not exist at the url : '$tar_url'"
+					#下载安装包失败，清理生成的临时文件及目录
+					clean_tmp
 					exit $ST_ERR
 				else
 					#下载安装包完成
 					tar_file="$downloaded_tmp_dir/${tar_url##*/}"
 					app_version=$(tar -tf $tar_file | awk -F "/" '{print $1}' | sed -n '1p')
+					#标记安装包是从远程下载下来的，为true安装完毕后会删除掉下载下来的安装包
 					is_tar_file_download="true"
 				fi
 			fi
@@ -110,11 +110,8 @@ function fun_prepare(){
 		if test -n "$files"; then
 			#已安装过，则退出，且删除下载的安装包
 			echo "fun_prepare(): you have installed the $installed_dir, exit!"
-			if [ $is_mked_tmp_dir -eq $OK ]; then
-				rm -rf $downloaded_tmp_dir
-			else
-				clean_tmp
-			fi
+			#已安装，删除创建的临时文件及目录
+			clean_tmp
 			return $FAILED
 		fi
 	fi
@@ -212,17 +209,26 @@ function fun_install(){
 		echo "install(): Install hadoop failed, exit!"
 		exit $ST_ERR
 	fi
+	#	解压完后检查解压到的文件是否存在
+	local myhome=$install_dir/$app_version
+	if [ ! -d $myhome ]; then
+		echo "install(): the install home ($myhome) not exists, check the tar file is ok or not. install will exit!"
+		exit $ST_ERR
+	fi
 	
-	#3、创建软链接
+	#3、创建软链接,如果指定软链接则用软链接
 	if test -n "$installed_ln"; then
 		if [ -d $installed_ln ]; then
 			local ln_tmp=$installed_ln/$type
 			echo "install(): you point the link dir is '$installed_ln', the link file will be '$ln_tmp' created."
 			installed_ln=$ln_tmp
 		else
-			echo "install(): you point the soft link path is '$installed_ln'"
+			echo "install(): you pointed the soft link path is '$installed_ln', will exec 'ln -s $installed_ln'"
 		fi
-		fun_crt_sln "$install_dir/$app_version" $installed_ln
+		fun_crt_sln $myhome $installed_ln
+		installed_home=$installed_ln
+	else
+		installed_home=$myhome
 	fi
 
 	#4、下载配置文件
@@ -258,7 +264,7 @@ function out_jdk_env(){
 	echo "build jdk envirement in file $out_env_path"
 	local jdk_env="$downloaded_tmp_dir/.jdk_tmp.sh.tmp"
 	echo "#!/bin/sh" > $jdk_env
-	echo "export JAVA_HOME=$installed_ln" >> $jdk_env
+	echo "export JAVA_HOME=$installed_home" >> $jdk_env
 	echo 'export PATH=$PATH:$JAVA_HOME/bin/' >> $jdk_env
 	echo "export CLASSPATH=$JAVA_HOME/lib" >> $jdk_env
 	echo "export JRE_HOME=$JAVA_HOME/jre" >> $jdk_env
@@ -279,7 +285,7 @@ function out_scala_env(){
 	#配置scala环境变量
 	echo "build scala envirement in file $out_env_path"
 	local scala_env="$downloaded_tmp_dir/.scala_tmp.sh.tmp"
-	echo "export SCALA_HOME=$installed_ln" > $scala_env
+	echo "export SCALA_HOME=$installed_home" > $scala_env
 	echo 'export PATH=$PATH:$SCALA_HOME/bin' >> $scala_env
 	sudo sh -c "cat $scala_env > $out_env_path"
 	rm -f $scala_env
@@ -326,7 +332,7 @@ function out_zk_env(){
 	echo "build zookeeper envirement in file $out_env_path"
 	local zk_tmp="$downloaded_tmp_dir/.zk_tmp.sh.tmp"
 	echo "#!/bin/sh" > $zk_tmp
-	echo "export ZOOKEEPER_HOME=$installed_ln" >> $zk_tmp
+	echo "export ZOOKEEPER_HOME=$installed_home" >> $zk_tmp
 	echo 'export PATH=$PATH:$ZOOKEEPER_HOME/bin' >> $zk_tmp
 	echo 'export CLASSPATH=$CLASSPATH:$ZOOKEEPER_HOME/lib:$ZOOKEEPER_HOME/share' >> $zk_tmp
 	sudo sh -c "cat $zk_tmp > $out_env_path"
@@ -352,7 +358,7 @@ function out_hadoop_env(){
 	echo "build hadoop envirement in file $out_env_path"
 	local hadoop_env_tmp="$downloaded_tmp_dir/.hadoop_tmp.sh.tmp"
 	echo "#!/bin/sh" > $hadoop_env_tmp
-	echo "export HADOOP_HOME=$installed_ln" >> $hadoop_env_tmp
+	echo "export HADOOP_HOME=$installed_home" >> $hadoop_env_tmp
 	echo 'export HADOOP_PREFIX=$HADOOP_HOME' >> $hadoop_env_tmp
 	echo 'export HADOOP_COMMON_HOME=$HADOOP_PREFIX' >> $hadoop_env_tmp
 	echo 'export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_PREFIX/lib/native' >> $hadoop_env_tmp
@@ -383,7 +389,7 @@ function out_hbase_env(){
 	echo "build hbase envirement in file $out_env_path"
 	local hbase_tmp="$downloaded_tmp_dir/.hbase_env_tmp.sh.tmp"
 	echo "#!/bin/sh" > $hbase_tmp
-	echo "export HBASE_HOME=$installed_ln" >> $hbase_tmp
+	echo "export HBASE_HOME=$installed_home" >> $hbase_tmp
 	echo 'export PATH=$PATH:$HBASE_HOME/bin' >> $hbase_tmp
 	echo 'export CLASSPATH=$CLASSPATH:$HBASE_HOME/lib' >> $hbase_tmp
 	
@@ -406,7 +412,7 @@ function out_spark_env(){
 	echo "build spark envirement in file $out_env_path"
 	local spark_tmp="$downloaded_tmp_dir/.spark_env_tmp.sh.tmp"
 	echo "#!/bin/sh" > $spark_tmp
-	echo "export SPARK_HOME=$installed_ln" >> $spark_tmp
+	echo "export SPARK_HOME=$installed_home" >> $spark_tmp
 	echo 'export PATH=$PATH:$SPARK_HOME/sbin' >> $spark_tmp
 	
 	sudo sh -c "cat $spark_tmp > $out_env_path"
@@ -519,7 +525,7 @@ function install_main(){
 		exit $ST_ERR
 	fi
 
-	out_env_path=/etc/profile.d/${type}_evn.sh
+	out_env_path=/etc/profile.d/${type}_auto_installed_env.sh
 	case "$type" in
 		jdk)
 			has_conf="false"
@@ -563,7 +569,6 @@ function install_main(){
 		;;
 	esac
 	echo "∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨end∨∨$(hostname)∨∨$type∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨"
-	echo -e "\n"
 }
 
 install_main
