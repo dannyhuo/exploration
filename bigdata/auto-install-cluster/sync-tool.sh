@@ -160,15 +160,16 @@ function main(){
 	#同步执行命令
 	if test -n "$cluster_cmd"
 	then
-		echo "will exec the command '$cluster_cmd' on cluster of $cluster_conf!"
 		local hosts=`cat $cluster_conf`
 		for host in $hosts
 		do
+			echo "will exec the command '$cluster_cmd' at host '$host'."
 			if [ "$sudo_flag" == "true" ]; then
 				ssh -t $host "sudo $cluster_cmd"
 			else
 				ssh -t $host "$cluster_cmd"
 			fi
+			echo -e "\n"
 		done
 	fi
 }

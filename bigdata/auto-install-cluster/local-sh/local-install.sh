@@ -414,6 +414,7 @@ function out_spark_env(){
 	echo "#!/bin/sh" > $spark_tmp
 	echo "export SPARK_HOME=$installed_home" >> $spark_tmp
 	echo 'export PATH=$PATH:$SPARK_HOME/sbin' >> $spark_tmp
+	echo 'export PATH=$PATH:$SPARK_HOME/bin' >> $spark_tmp
 	
 	sudo sh -c "cat $spark_tmp > $out_env_path"
 	rm -r $spark_tmp
