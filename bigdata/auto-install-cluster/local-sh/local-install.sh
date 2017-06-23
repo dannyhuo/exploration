@@ -21,7 +21,10 @@ declare installed_ln
 #配置文件所在目录
 declare conf_location
 #输出环境变量
-declare out_env_path
+declare out_env_path=/etc/profile.d/${type}_auto_installed_env.sh
+
+#是否重将，true时，遇到已存在的目录及软链接将删除
+declare reinstall="false"
 
 declare OK=0
 declare FAILED=1
@@ -46,14 +49,19 @@ function fun_prepare(){
 	fi
 	
 	if [ -f $install_dir ]; then
-		echo "fun_prepare(): you point the install dir by -d is a exists file, $install_dir"
-		exit $FAILED
+		echo "fun_prepare(): you point the install dir by -d is a exists file => $install_dir"
+		return $FAILED
 	fi
 	
 	#2、判断安装目录是否存在，不存在则创建
 	if [ ! -d $install_dir -a ! -f $install_dir ]; then
 		echo "fun_prepare(): you point the directory not exist, will exec mkdir $install_dir"
 		mkdir -p $install_dir
+		#如果创建安装指定的安装目录失败，则返回
+		if [ $? -ne 0 ]; then
+			echo "fun_prepare(): you point the directory not exist, mkdir $install_dir failed!"
+			return $FAILED
+		fi
 	fi
 	
 	#3、判断压缩包是否存在
@@ -81,9 +89,7 @@ function fun_prepare(){
 				scp $tar_url $downloaded_tmp_dir
 				if [ $? -ne 0 ]; then
 					echo "the tar file not exist at the url : '$tar_url'"
-					#下载安装包失败，清理生成的临时文件及目录
-					clean_tmp
-					exit $ST_ERR
+					return $FAILED
 				else
 					#下载安装包完成
 					tar_file="$downloaded_tmp_dir/${tar_url##*/}"
@@ -96,7 +102,7 @@ function fun_prepare(){
 			#如果配置安装地址是在本机path中
 			if [ ! -f $tar_url ]; then
 				echo "the local tar file($tar_url) not exists!"
-				exit $ST_ERR
+				return $FAILED
 			fi
 			tar_file=$tar_url
 			app_version=$(tar -tf $tar_file | awk -F "/" '{print $1}' | sed -n '1p')
@@ -106,17 +112,55 @@ function fun_prepare(){
 	#4、判断安装文件是否存在
 	local installed_dir=$install_dir/$app_version
 	if [ -d "$installed_dir" ]; then
-		local files=$(ls $installed_dir)
-		if test -n "$files"; then
+		if [ "$reinstall" == "true" ]; then
+			#如何指定为重装，则删除已安装的目录
+			rm -rf $installed_dir
+			if [ $? -ne 0 ]; then
+				echo "the install home ($installed_dir) exists, remove failed, check the software is running or not."
+				return $FAILED
+			fi
+		else
 			#已安装过，则退出，且删除下载的安装包
 			echo "fun_prepare(): you have installed the $installed_dir, exit!"
-			#已安装，删除创建的临时文件及目录
-			clean_tmp
 			return $FAILED
 		fi
 	fi
 	
-	#5、检查防火墙
+	#5、如果指定了软链接，则判断软链接是否存在
+	if test -n "$installed_ln"; then
+		if [ -d $installed_ln ]; then
+			#软链接如果指定的是一个目录，则软链接的名字默认为$type, 比如jdk, hadoop etc.
+			local ln_tmp=$installed_ln/$type
+			echo "install(): you point the link dir is '$installed_ln', the link file will be '$ln_tmp' created."
+			installed_ln=$ln_tmp
+		else
+			echo "install(): you pointed the soft link path is '$installed_ln', will exec 'ln -s $installed_ln' after tar -zxvf the tar file"
+		fi
+		
+		if [ -f $installed_ln ]; then
+			if [ "$reinstall" == "true" ]; then
+				echo "fun_prepare(): the soft link file is exists, will remove it first!"
+				rm -rf $installed_ln
+			else
+				echo "fun_prepare(): the soft link file is exists, please check it first!"
+				return $FAILED
+			fi
+		fi
+	fi
+	
+	#6、判断环境变量是否存在
+	if [ -f "$out_env_path" ]; then
+		if [ "$reinstall" == "true" ]; then
+			echo "fun_prepare(): out put evn file($out_env_path) is exists, will remove it first!"
+			sudo rm -rf $out_env_path
+			source /etc/profile
+		else
+			echo "fun_prepare(): out put evn file($out_env_path) is exists, please check it first!"
+			return $FAILED
+		fi
+	fi
+	
+	#7、检查防火墙
 	firewallStatus=$(firewall-cmd --state)
 	local cur_host=$(hostname)
 	echo "fun_prepare(): the host $cur_host firewall status is  $firewallStatus."
@@ -128,7 +172,6 @@ function fun_prepare(){
 	
 	return $OK
 }
-
 
 #创建软链接
 function fun_crt_sln(){
@@ -199,6 +242,8 @@ function fun_install(){
 	#1、安装前检查
 	fun_prepare
 	if [ $? -eq $FAILED ]; then
+		#如果检查失败，则清除临时创建的目录及安装包
+		clean_tmp
 		exit $ST_ERR
 	fi
 
@@ -218,13 +263,6 @@ function fun_install(){
 	
 	#3、创建软链接,如果指定软链接则用软链接
 	if test -n "$installed_ln"; then
-		if [ -d $installed_ln ]; then
-			local ln_tmp=$installed_ln/$type
-			echo "install(): you point the link dir is '$installed_ln', the link file will be '$ln_tmp' created."
-			installed_ln=$ln_tmp
-		else
-			echo "install(): you pointed the soft link path is '$installed_ln', will exec 'ln -s $installed_ln'"
-		fi
 		fun_crt_sln $myhome $installed_ln
 		installed_home=$installed_ln
 	else
@@ -437,6 +475,7 @@ function print_help(){
 	echo -e "\t-d(integrant) : the directory that you want install to."
 	echo -e "\t-conf(integrant) : the cont dir, hadoop $HADOOP_HOME/etc/hadoop, or $HBASE_HOME/conf..."
 	echo -e "\t-sl(optional) : point the soft link location you want to, default at ~, if you don't point it."
+	echo -e "\t-redo(re install) : point redo is true, will remove the exists install home , soft link and env sh."
 }
 
 #参数解析入口##############################################################################################################
@@ -459,7 +498,7 @@ while test -n "$1"; do
 			shift
 		;;
 		
-		#tar包所在路径，必须参数
+		#tar包所在路径，必须参数, local path or remote url
 		-tar)
 			if test -z "$2"; then
 				echo "parse param : you must point the tar url by optio -tar, is a local path or a remote path(host:localpath)"
@@ -470,18 +509,18 @@ while test -n "$1"; do
 		;;
 		
 		-d)
-			if [ ! -d $2 ]; then
-				#指定的安装目录不存在
-				echo "parse param : the install directory is not found, check it"
+			if test -z "$2" || test -f "$2"; then
+				#未指定安装目录
+				echo "parse param : you point the install directory is null or a directory, check it"
 				exit $ST_ERR
 			fi
-			install_dir=$2	
+			install_dir=$2
 			shift
 		;;
 		
 		-sl)
-			if [ ! -d $2 -o -f $2 ]; then
-				echo "parse param : you pointed the soft link directory ($2) not exist or is a exists file, check it."
+			if test -z "$2"; then
+				echo "parse param : you pointed the soft link path is null, check it."
 				exit $ST_ERR
 			fi
 			installed_ln=$2
@@ -497,6 +536,11 @@ while test -n "$1"; do
 			shift
 		;;
 		
+		-redo)
+			reinstall=$2
+			shift
+		;;
+		
 		*)
 			echo "parse param : unknow options: $1"
 			print_help
@@ -509,8 +553,7 @@ done
 
 #安装应用主入口##############################################################################################################
 function install_main(){
-	echo -e "\n"
-	echo "∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧start∧∧$(hostname)∧∧$type∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧"
+	echo "∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧start∧∧install∧∧$type∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧$(hostname)∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧"
 	if test -z "$type"; then
 		echo "install_main(): please point the install type by -t, for what software you to install."
 		exit $ST_ERR
@@ -526,7 +569,6 @@ function install_main(){
 		exit $ST_ERR
 	fi
 
-	out_env_path=/etc/profile.d/${type}_auto_installed_env.sh
 	case "$type" in
 		jdk)
 			has_conf="false"
@@ -569,7 +611,7 @@ function install_main(){
 			echo "your type '$type' is unresolved, please point type as jdk, scala, zookeeper, hadoop, hbase, spark."
 		;;
 	esac
-	echo "∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨end∨∨$(hostname)∨∨$type∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨"
+	echo "∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨end∨∨install∨∨$type∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨$(hostname)∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨"
 }
 
 install_main
