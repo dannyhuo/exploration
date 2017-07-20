@@ -11,13 +11,17 @@ import scala.xml.XML
 /**
   * Created by huoqiang on 10/7/2017.
   */
-class SqlParser(sql : String, tableConfig : String) {
+class SqlParser(sqles : Seq[String], tableConfig : String) {
 
   def this(sql : String){
-    this(sql, "/home/hadoop/upload/conf/table_configs.xml")
+    this(Seq.empty[String].:+(sql), "/home/hadoop/upload/conf/table_configs.xml")
   }
 
-  private val sqlText : String = sql.trim.toLowerCase()
+  def this(sqles : Seq[String]){
+    this(sqles, "/home/hadoop/upload/conf/table_configs.xml")
+  }
+
+  private val sqlTextes : Seq[String] = sqles
   private val SELECT = "select "
   private val FROM = " from "
   private val DISTINCT = "distinct "
@@ -42,7 +46,7 @@ class SqlParser(sql : String, tableConfig : String) {
 
 
   private val IS_HAVE_SUB_QUERY_REGEXP_STR = ".+\\([ ]*select .+ from .+\\s*\\).*"
-  private val SUB_QUERY_REGEXP = "\\([ ]*select .+ from .+\\s*\\)".r
+  //private val SUB_QUERY_REGEXP = "\\([ ]*select .+ from .+\\s*\\)".r
   private val SUB_QUERY_REPLACE_FLAG = "-"
   private var error_message = ""
 
@@ -131,11 +135,13 @@ class SqlParser(sql : String, tableConfig : String) {
     */
   private def parse() : Unit = {
     //1、分解sql
-    sqlText.split(UNION).foreach(sql => {
-      //解析前去除无用关键字，如：distinct, as(用空格代替), desc, asc
-      val tSql = sql.replaceAll(DISTINCT, NULL_STRING).replaceAll(AS, BLANK)
-        .replaceAll(DESC, NULL_STRING).replaceAll(ASC, NULL_STRING)
-      findSubQueryAndSplit(tSql)
+    sqlTextes.foreach(sql => {
+      sql.toLowerCase.split(UNION).foreach(sql => {
+        //解析前去除无用关键字，如：distinct, as(用空格代替), desc, asc
+        val tSql = sql.trim.replaceAll(DISTINCT, NULL_STRING).replaceAll(AS, BLANK)
+          .replaceAll(DESC, NULL_STRING).replaceAll(ASC, NULL_STRING)
+        findSubQueryAndSplit(tSql)
+      })
     })
 
     //2、解析from子句(解析sql中有哪些表)
@@ -163,11 +169,7 @@ class SqlParser(sql : String, tableConfig : String) {
     }
   }
 
-  /**
-    * 递归查找并分解子查询
-    * @param querySql
-    */
-  private def findSubQueryAndSplit(querySql: String): Unit = {
+  /*private def findSubQueryAndSplit(querySql: String): Unit = {
     if(querySql.matches(IS_HAVE_SUB_QUERY_REGEXP_STR)){
       var handedSql = querySql
       SUB_QUERY_REGEXP.findAllIn(querySql).foreach(s=>{
@@ -179,6 +181,49 @@ class SqlParser(sql : String, tableConfig : String) {
       subQuerySqlSplit(handedSql)
     }else{
       //解析子查询
+      subQuerySqlSplit(querySql)
+    }
+  }*/
+
+  /**
+    * 递归查找并分解子查询
+    * @param querySql
+    */
+  def findSubQueryAndSplit(querySql : String) : Unit = {
+    if(querySql.matches(IS_HAVE_SUB_QUERY_REGEXP_STR)) {
+      val s = querySql.toLowerCase().trim
+      val len = s.length
+      val subSql = new StringBuffer()
+      var flag = false
+      var left = 0
+      var right = 0
+      for(i <- 0 until len) {
+        val c = s.charAt(i)
+        if (c == '(') {
+          if(s.substring(i+1, len).trim.startsWith("select")){
+            flag = true
+          }
+          if(flag){
+            left = left + 1
+            if(left > 1){
+              subSql.append(c)
+            }
+          }
+        } else if (flag) {
+          if(c == ')'){
+            right = right + 1
+          }
+          if (left == right) {
+            flag = false
+            val resSubSql = subSql.toString
+            findSubQueryAndSplit(resSubSql.trim)
+            findSubQueryAndSplit(querySql.replace("(" + resSubSql + ")", SUB_QUERY_REPLACE_FLAG).trim)
+          }else{
+            subSql.append(c)
+          }
+        }
+      }
+    }else{
       subQuerySqlSplit(querySql)
     }
   }
@@ -258,9 +303,13 @@ class SqlParser(sql : String, tableConfig : String) {
           tmpTabAlias.put(kv(1).trim, SUB_QUERY_REPLACE_FLAG)
         }else{
           tabAliasFromSql.put(kv(1).trim, kv(0).trim)
+          println("========================table name of '" + kv(0) + "' will put to the map, the key is '" + kv(1) + "'")
         }
       }else if(kv.length == 1){
-        tabAliasFromSql.put(kv(0).trim, kv(0).trim)
+        if(kv(0).trim != SUB_QUERY_REPLACE_FLAG){
+          tabAliasFromSql.put(kv(0).trim, kv(0).trim)
+          println("======================table name of '" + kv(0) + "' will put to the map, the key is '" + kv(0) + "'")
+        }
       }else{
         //TODO
         error_message = "Syntax found error near '" + t + "'."
@@ -436,15 +485,12 @@ class SqlParser(sql : String, tableConfig : String) {
     var colStructFieldTuple : (StructField, String) = null
     var colName : String = null
     var colTabName : String = null
-    if(arr.length == 2){//带别名
+    if(arr.length == 2){//列指定了表名或表的别名
       if(null != tmpTabAlias.get(arr(0))){
         //临时表中的列，不需重复解析列
         return
       }
-      if(null != tmpColAlias.get(arr(1))){
-        //查询列中取的别名，不需重复解析
-        return
-      }
+
       colTabName = tabAliasFromSql.get(arr(0))
       if(colTabName == null){
         //TODO
@@ -473,11 +519,6 @@ class SqlParser(sql : String, tableConfig : String) {
       }
       colName = arr(1)
     }else if(arr.length == 1){//不带别名
-      if(null != tmpColAlias.get(arr(0))){
-        //查询列中取的别名，不需重复解析
-        return
-      }
-
       colName = arr(0)
       val aliasTableIterator = tabAliasFromSql.values().iterator()
       while(aliasTableIterator.hasNext){
@@ -511,6 +552,11 @@ class SqlParser(sql : String, tableConfig : String) {
       //return
     }
     if(null == colName || null == colTabName || null == colStructFieldTuple){
+      if(null != tmpColAlias.get(arr(0))){
+        //查询列中取的别名，不需重复解析
+        println(".......................not parse duplicate the column of " + arr(0))
+        return
+      }
       //TODO
       error_message = "Found unknown error for parse clause near sql of '" + exactCol + "'."
       throw new RuntimeException(error_message)

@@ -1,15 +1,17 @@
 package crm.digit.mkting
 
+import java.util.{Map, Set}
+
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.client.Result
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.SparkConf
-
 import crm.digit.mkting.df.Rdd2DFUtil
-import crm.digit.mkting.sql.SqlParser
+import crm.digit.mkting.sql.{RegisteSparkView, SqlParser}
+import org.apache.spark.sql.types.StructType
 
 
 /**
@@ -66,6 +68,21 @@ object App {
       throw new Exception("you don't point the parameter of sql text or json ")
     }
     println(".............................................sql is =" + args(0))
-    test(args(0))
+    val sqles = args(0).split(";").map(s => s)
+
+    val parser = new SqlParser(sqles)
+
+    val sparkConf = new SparkConf().setMaster("yarn").setAppName("Spark sql basic test")
+    val sc = new SparkContext(sparkConf)
+    val sparkSession = SparkSession.builder().config(sparkConf).getOrCreate()
+
+    val rsv = new RegisteSparkView(sparkSession, sc)
+    rsv.createOrReplaceView(parser.getSparkSchemas)
+    sqles.foreach(s => {
+      val df = sparkSession.sqlContext.sql(s)
+
+      df.show(100)
+    })
   }
+
 }
