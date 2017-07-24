@@ -3,7 +3,7 @@ package crm.digit.mkting
 import java.io._
 import java.text.SimpleDateFormat
 
-import crm.digit.mkting.df.{FileUtil, Rdd2DFUtil}
+import crm.digit.mkting.df.{DfsUtil, Rdd2DFUtil}
 import crm.digit.mkting.sql.TablesSchema
 import crm.up.service.UpModelJobHessianService
 import crm.up.service.UpModelJobHessianServiceProxy
@@ -60,7 +60,7 @@ object MemQuery {
     writeState(RUNNING)
 
     //启动心跳监测线程
-    val t = new Thread(new HeartBeat(fs, heartBeatPath, HEAT_BEAT_INTERVAL_MS))
+    val t = new Thread(new HeartBeat2(fs, heartBeatPath, HEAT_BEAT_INTERVAL_MS))
     t.start()
 
     //创建spark session
@@ -80,7 +80,7 @@ object MemQuery {
 
     //主线程循环监测提交过来的任务，并准备执行
     try{
-      execedModels = FileUtil.deserializeObject(fs, execedModelSerializePath)
+      execedModels = DfsUtil.deserializeObject(fs, execedModelSerializePath)
     }catch{
       case ex : Exception => {
         execedModels = new HashMap[String, String]
@@ -175,7 +175,7 @@ object MemQuery {
             if(exeOk && afterExeTask(modelId, resultId, exeOk, errorMsg) == 0L) {
               //任务执行之后
               execedModels.put(filePath.getName, model)
-              FileUtil.objectSerialize(fs, execedModels, execedModelSerializePath)
+              DfsUtil.objectSerialize(fs, execedModels, execedModelSerializePath)
             }
           }else{
             println("This model of '" + model.toString + "' is error!")
@@ -367,8 +367,9 @@ object MemQuery {
 
 }
 
-class HeartBeat(fs : FileSystem, heartBeatPath : Path, heartBeatInterval : Int) extends Runnable{
+class HeartBeat2(fs : FileSystem, heartBeatPath : Path, heartBeatInterval : Int) extends Runnable{
   val dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+
   override def run(): Unit = {
     while(true){
       Thread.sleep(heartBeatInterval)
