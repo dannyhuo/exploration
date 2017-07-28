@@ -1,4 +1,4 @@
-package crm.digit.mkting.mem.query
+package crm.digit.mkting.mem.query.constant
 
 /**
   * Created by huoqiang on 20/7/2017.
@@ -12,5 +12,8 @@ object ModelEnum {
   val NOTIFY_CRM_FAILED = 4
   val EXEC_OKAY = 5
   val EXEC_FAILED = 6
+
+  val MODEL_TAG = 11
+  val MODEL_OPERATOR = 12
 
 }
