@@ -248,7 +248,7 @@ function fun_install(){
 	if [ $? -eq $FAILED ]; then
 		#如果检查失败，则清除临时创建的目录及安装包
 		clean_tmp
-		exit $ST_ERR
+		exit $FAILED
 	fi
 
 	#2、解压
@@ -256,13 +256,13 @@ function fun_install(){
 	fun_un_cmprs $tar_file $install_dir
 	if [ $? -eq $FAILED ]; then
 		echo "install(): Install hadoop failed, exit!"
-		exit $ST_ERR
+		exit $FAILED
 	fi
 	#	解压完后检查解压到的文件是否存在
 	local myhome=$install_dir/$app_version
 	if [ ! -d $myhome ]; then
 		echo "install(): the install home ($myhome) not exists, check the tar file is ok or not. install will exit!"
-		exit $ST_ERR
+		exit $FAILED
 	fi
 	
 	#3、创建软链接,如果指定软链接则用软链接
@@ -487,7 +487,7 @@ while test -n "$1"; do
 	case "$1" in
 		--help | -h)
 			print_help
-			exit $ST_OK
+			exit $OK
 		;;
 		
 		#分发上传参数###################################################################################
@@ -495,7 +495,7 @@ while test -n "$1"; do
 			if test -z "$2"
 			then
 				echo "parse param : please input type by -t, zookeeper, hadoop, hbase, spark....."
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			echo "parse param : you point the type is $2, will install $2!"
 			type=$2	
@@ -506,7 +506,7 @@ while test -n "$1"; do
 		-tar)
 			if test -z "$2"; then
 				echo "parse param : you must point the tar url by optio -tar, is a local path or a remote path(host:localpath)"
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			tar_url=$2
 			shift
@@ -516,7 +516,7 @@ while test -n "$1"; do
 			if test -z "$2" || test -f "$2"; then
 				#未指定安装目录
 				echo "parse param : you point the install directory is null or a directory, check it"
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			install_dir=$2
 			shift
@@ -525,7 +525,7 @@ while test -n "$1"; do
 		-sl)
 			if test -z "$2"; then
 				echo "parse param : you pointed the soft link path is null, check it."
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			installed_ln=$2
 			shift
@@ -534,7 +534,7 @@ while test -n "$1"; do
 		-conf)
 			if test -z $2; then
 				echo "parse param : the -conf don't point the conf location, is like host:/home/hadoop/conf/etc/hadoop"
-				$ST_ERR
+				$FAILED
 			fi
 			conf_location=$2
 			shift
@@ -548,7 +548,7 @@ while test -n "$1"; do
 		*)
 			echo "parse param : unknow options: $1"
 			print_help
-			exit $ST_ERR
+			exit $FAILED
 		;;
 	esac
 	
@@ -560,17 +560,17 @@ function install_main(){
 	echo "∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧start∧∧install∧∧$type∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧$(hostname)∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧"
 	if test -z "$type"; then
 		echo "install_main(): please point the install type by -t, for what software you to install."
-		exit $ST_ERR
+		exit $FAILED
 	fi
 	
 	if test -z "$tar_url"; then
 		echo "install_main(): please point the tar file by option -tar, is a tar file."
-		exit $ST_ERR
+		exit $FAILED
 	fi
 	
 	if test -z "$install_dir"; then
 		echo "install_main(): please point the install directory by option -d, is a directory."
-		exit $ST_ERR
+		exit $FAILED
 	fi
 
 	out_env_path=/etc/profile.d/${type}_auto_installed_env.sh
@@ -587,28 +587,28 @@ function install_main(){
 		zookeeper)
 			if test -z "$conf_location"; then
 				echo "install_main(): please point the conf location by option -conf, like as 'host@:/home/hadoop/upload/conf/$type'."
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			install_zookeeper
 		;;
 		hadoop)
 			if test -z "$conf_location"; then
 				echo "install_main(): please point the conf location by option -conf, like as 'host@:/home/hadoop/upload/conf/$type'."
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			install_hadoop
 		;;
 		hbase)
 			if test -z "$conf_location"; then
 				echo "install_main(): please point the conf location by option -conf, like as 'host@:/home/hadoop/upload/conf/$type'."
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			install_hbase
 		;;
 		spark)
 			if test -z "$conf_location"; then
 				echo "install_main(): please point the conf location by option -conf, like as 'host@:/home/hadoop/upload/conf/$type'."
-				exit $ST_ERR
+				exit $FAILED
 			fi
 			install_spark
 		;;

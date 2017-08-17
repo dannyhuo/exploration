@@ -57,6 +57,9 @@ declare spark_conf_url
 
 declare reinstall="false"
 
+declare ST_OK=0
+declare ST_ERR=1
+
 #读取配置
 function init_conf(){
 	if [ ! -f "$cluster_install_conf" ]; then
