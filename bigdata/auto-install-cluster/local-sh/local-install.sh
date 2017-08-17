@@ -7,7 +7,7 @@ declare conf_load_ok=1
 #tar包的地址，本地或远程
 declare tar_url
 #存放从远程下载安装包的目录
-declare downloaded_tmp_dir=~/.tmp_cluster_auto_install_downloaded_tars
+declare installing_tmp_dir=~/.tmp_cluster_auto_install_dir
 declare is_tar_file_download="false"
 #安装包文件
 declare tar_file
@@ -21,7 +21,7 @@ declare installed_ln
 #配置文件所在目录
 declare conf_location
 #输出环境变量
-declare out_env_path=/etc/profile.d/${type}_auto_installed_env.sh
+declare out_env_path
 
 #是否重将，true时，遇到已存在的目录及软链接将删除
 declare reinstall="false"
@@ -30,16 +30,18 @@ declare OK=0
 declare FAILED=1
 
 ##自定义功能函数部分start#####################################################################################################
-#预检查
+#清理临时文件或目录
 function clean_tmp(){
-	if [ -f "$downloaded_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag" ]; then
-		rm -rf $downloaded_tmp_dir
+	if [ -f "$installing_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag" ]; then
+		echo "clean_tmp() : Will remove the tmp dir of $installing_tmp_dir"
+		rm -rf $installing_tmp_dir
 	elif [ "$is_tar_file_download" == "true" ]; then
-		echo "the install tar file at '$tar_file' is downloaded, install finished will rm it."
+		echo "clean_tmp() : The install tar file at '$tar_file' is downloaded, install finished will rm it."
 		rm -f $tar_file
 	fi
 }
 
+#预检查
 function fun_prepare(){
 	
 	#1、判断是否指定了安装目录
@@ -69,6 +71,13 @@ function fun_prepare(){
 		echo "fun_prepare(): you must point the tar file by option -tar, is a local path or remote path(host:localpath)!"
 		return $FAILED
 	else
+		#创建临时目录，用于存放远程下载下来的安装包和临时写入文件等
+		if [ ! -d $installing_tmp_dir ]; then
+			mkdir $installing_tmp_dir
+			#在临时目录中创建一个自动创建目录的标记，安装完后删除整个目录，如果目录原来存在，只删除下载的文件
+			echo "1" > $installing_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag
+		fi
+		
 		#解析tar_url, 如果为远程url，则将远程的tar包下载到本地目录中
 		if [[ "$tar_url" =~ ":" ]]; then
 			#如果安装包在远程url中
@@ -78,21 +87,16 @@ function fun_prepare(){
 				tar_file=$tar_parth
 				app_version=$(tar -tf $tar_file | awk -F "/" '{print $1}' | sed -n '1p')
 			else
-				#创建临时目录，用于存放远程下载下来的安装包
-				if [ ! -d $downloaded_tmp_dir ]; then
-					mkdir $downloaded_tmp_dir
-					#在临时目录中创建一个自动创建目录的标记，安装完后删除整个目录，如果目录原来存在，只删除下载的文件
-					echo "1" > $downloaded_tmp_dir/.is_auto_cluster_install_sh_mkdired.flag
-				fi
+				
 				
 				#将远程tar file， 下载到本地
-				scp $tar_url $downloaded_tmp_dir
+				scp $tar_url $installing_tmp_dir
 				if [ $? -ne 0 ]; then
-					echo "the tar file not exist at the url : '$tar_url'"
+					echo "the tar file may be doesn't exist at the url : '$tar_url'"
 					return $FAILED
 				else
 					#下载安装包完成
-					tar_file="$downloaded_tmp_dir/${tar_url##*/}"
+					tar_file="$installing_tmp_dir/${tar_url##*/}"
 					app_version=$(tar -tf $tar_file | awk -F "/" '{print $1}' | sed -n '1p')
 					#标记安装包是从远程下载下来的，为true安装完毕后会删除掉下载下来的安装包
 					is_tar_file_download="true"
@@ -101,7 +105,7 @@ function fun_prepare(){
 		else
 			#如果配置安装地址是在本机path中
 			if [ ! -f $tar_url ]; then
-				echo "the local tar file($tar_url) not exists!"
+				echo "the local tar file ($tar_url) doesn't exists!"
 				return $FAILED
 			fi
 			tar_file=$tar_url
@@ -114,7 +118,7 @@ function fun_prepare(){
 	if [ -d "$installed_dir" ]; then
 		if [ "$reinstall" == "true" ]; then
 			#如何指定为重装，则删除已安装的目录
-			rm -rf $installed_dir
+			sudo rm -rf $installed_dir
 			if [ $? -ne 0 ]; then
 				echo "the install home ($installed_dir) exists, remove failed, check the software is running or not."
 				return $FAILED
@@ -290,8 +294,8 @@ function fun_install(){
 	fi
 	
 	#5、安装完毕，清理文件
-	echo "install(): install finished, clearing the tmp file and jar file........................................"
-	clean_tmp
+	echo "install(): install finished!"
+	
 }
 
 ##自定义功能函数部分end#####################################################################################################
@@ -300,12 +304,12 @@ function fun_install(){
 function out_jdk_env(){
 	#配置java环境变量
 	echo "build jdk envirement in file $out_env_path"
-	local jdk_env="$downloaded_tmp_dir/.jdk_tmp.sh.tmp"
+	local jdk_env="$installing_tmp_dir/.jdk_tmp.sh.tmp"
 	echo "#!/bin/sh" > $jdk_env
 	echo "export JAVA_HOME=$installed_home" >> $jdk_env
+	echo 'export JRE_HOME=$JAVA_HOME/jre' >> $jdk_env
 	echo 'export PATH=$PATH:$JAVA_HOME/bin/' >> $jdk_env
-	echo "export CLASSPATH=$JAVA_HOME/lib" >> $jdk_env
-	echo "export JRE_HOME=$JAVA_HOME/jre" >> $jdk_env
+	echo 'export CLASSPATH=.:$JAVA_HOME/lib:$JRE_HOME/lib' >> $jdk_env
 	sudo sh -c "cat $jdk_env > $out_env_path"
 	rm -f $jdk_env
 	sleep 1
@@ -322,7 +326,7 @@ function install_jdk(){
 function out_scala_env(){
 	#配置scala环境变量
 	echo "build scala envirement in file $out_env_path"
-	local scala_env="$downloaded_tmp_dir/.scala_tmp.sh.tmp"
+	local scala_env="$installing_tmp_dir/.scala_tmp.sh.tmp"
 	echo "export SCALA_HOME=$installed_home" > $scala_env
 	echo 'export PATH=$PATH:$SCALA_HOME/bin' >> $scala_env
 	sudo sh -c "cat $scala_env > $out_env_path"
@@ -366,9 +370,9 @@ function gener_zk_myid(){
 
 #输出环境变量
 function out_zk_env(){
-	#配置java环境变量
+	#配置zk环境变量
 	echo "build zookeeper envirement in file $out_env_path"
-	local zk_tmp="$downloaded_tmp_dir/.zk_tmp.sh.tmp"
+	local zk_tmp="$installing_tmp_dir/.zk_tmp.sh.tmp"
 	echo "#!/bin/sh" > $zk_tmp
 	echo "export ZOOKEEPER_HOME=$installed_home" >> $zk_tmp
 	echo 'export PATH=$PATH:$ZOOKEEPER_HOME/bin' >> $zk_tmp
@@ -392,9 +396,9 @@ function install_zookeeper(){
 
 #安装hadoop##############################################################################################################
 function out_hadoop_env(){
-	#配置java环境变量
+	#配置hadoop环境变量
 	echo "build hadoop envirement in file $out_env_path"
-	local hadoop_env_tmp="$downloaded_tmp_dir/.hadoop_tmp.sh.tmp"
+	local hadoop_env_tmp="$installing_tmp_dir/.hadoop_tmp.sh.tmp"
 	echo "#!/bin/sh" > $hadoop_env_tmp
 	echo "export HADOOP_HOME=$installed_home" >> $hadoop_env_tmp
 	echo 'export HADOOP_PREFIX=$HADOOP_HOME' >> $hadoop_env_tmp
@@ -423,9 +427,9 @@ function install_hadoop(){
 
 #安装hbase##############################################################################################################
 function out_hbase_env(){
-	#配置java环境变量
+	#配置hbase环境变量
 	echo "build hbase envirement in file $out_env_path"
-	local hbase_tmp="$downloaded_tmp_dir/.hbase_env_tmp.sh.tmp"
+	local hbase_tmp="$installing_tmp_dir/.hbase_env_tmp.sh.tmp"
 	echo "#!/bin/sh" > $hbase_tmp
 	echo "export HBASE_HOME=$installed_home" >> $hbase_tmp
 	echo 'export PATH=$PATH:$HBASE_HOME/bin' >> $hbase_tmp
@@ -446,9 +450,9 @@ function install_hbase(){
 
 #安装spark##############################################################################################################
 function out_spark_env(){
-	#配置java环境变量
+	#配置spark环境变量
 	echo "build spark envirement in file $out_env_path"
-	local spark_tmp="$downloaded_tmp_dir/.spark_env_tmp.sh.tmp"
+	local spark_tmp="$installing_tmp_dir/.spark_env_tmp.sh.tmp"
 	echo "#!/bin/sh" > $spark_tmp
 	echo "export SPARK_HOME=$installed_home" >> $spark_tmp
 	echo 'export PATH=$PATH:$SPARK_HOME/sbin' >> $spark_tmp
@@ -569,6 +573,8 @@ function install_main(){
 		exit $ST_ERR
 	fi
 
+	out_env_path=/etc/profile.d/${type}_auto_installed_env.sh
+	
 	case "$type" in
 		jdk)
 			has_conf="false"
@@ -611,6 +617,8 @@ function install_main(){
 			echo "your type '$type' is unresolved, please point type as jdk, scala, zookeeper, hadoop, hbase, spark."
 		;;
 	esac
+	#clear the tmp directory and tmp files.
+	clean_tmp
 	echo "∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨end∨∨install∨∨$type∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨$(hostname)∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨"
 }
 

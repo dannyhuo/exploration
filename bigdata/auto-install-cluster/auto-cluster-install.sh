@@ -55,6 +55,8 @@ declare spark_install_dir
 declare spark_slink_path
 declare spark_conf_url
 
+declare reinstall="false"
+
 #读取配置
 function init_conf(){
 	if [ ! -f "$cluster_install_conf" ]; then
@@ -160,6 +162,8 @@ function exec_install(){
 	local hosts_conf=$cluster_hosts_conf
 	if [ "$type" == "zookeeper" ]; then
 		hosts_conf=$cluster_hosts_conf_zk
+	elif [ "$type" == "all" ] || [ "$type" == "jdk" ] || [ "$type" == "scala" ]; then
+		hosts_conf=$current_cluster_sync_shell_hosts
 	fi
 	
 	if [ ! -f $hosts_conf ]; then
@@ -172,37 +176,37 @@ function exec_install(){
 		jdk)
 			for host in $hosts
 			do
-				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t jdk -tar $jdk_tar_source -sl $jdk_slink_path -d $jdk_install_dir"
+				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t jdk -tar $jdk_tar_source -sl $jdk_slink_path -d $jdk_install_dir -redo $reinstall"
 			done
 		;;
 		scala)
 			for host in $hosts
 			do
-				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t scala -tar $scala_tar_source -sl $scala_slink_path -d $scala_install_dir"
+				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t scala -tar $scala_tar_source -sl $scala_slink_path -d $scala_install_dir -redo $reinstall"
 			done
 		;;
 		zookeeper)
 			for host in $hosts
 			do
-				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t zookeeper -tar $zookeeper_tar_source -sl $zookeeper_slink_path -conf $zookeeper_conf_url -d $zookeeper_install_dir"
+				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t zookeeper -tar $zookeeper_tar_source -sl $zookeeper_slink_path -conf $zookeeper_conf_url -d $zookeeper_install_dir -redo $reinstall"
 			done
 		;;
 		hadoop)
 			for host in $hosts
 			do
-				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t hadoop -tar $hadoop_tar_source -sl $hadoop_slink_path -conf $hadoop_conf_url -d $hadoop_install_dir"
+				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t hadoop -tar $hadoop_tar_source -sl $hadoop_slink_path -conf $hadoop_conf_url -d $hadoop_install_dir -redo $reinstall"
 			done
 		;;
 		hbase)
 			for host in $hosts
 			do
-				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t hbase -tar $hbase_tar_source -sl $hbase_slink_path -conf $hbase_conf_url -d $hbase_install_dir"
+				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t hbase -tar $hbase_tar_source -sl $hbase_slink_path -conf $hbase_conf_url -d $hbase_install_dir -redo $reinstall"
 			done
 		;;
 		spark)
 			for host in $hosts
 			do
-				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t spark -tar $spark_tar_source -sl $spark_slink_path -conf $spark_conf_url -d $spark_install_dir"
+				ssh -t $host "$install_sh_home_tmp/local-sh/local-install.sh -t spark -tar $spark_tar_source -sl $spark_slink_path -conf $spark_conf_url -d $spark_install_dir -redo $reinstall"
 			done
 		;;
 		*)
@@ -241,20 +245,18 @@ function sync_shell(){
 }
 
 function clear_tmp(){
+	echo "Remove the tmp directory or files!"
 	sh $cur_sh_parent_dir/sync-tool.sh -c "rm -rf $install_sh_home_tmp" -cf $current_cluster_sync_shell_hosts
-	rm -f $current_cluster_sync_shell_hosts
+	#echo "Remove the sync hosts of $current_cluster_sync_shell_hosts"
+	#rm -f $current_cluster_sync_shell_hosts
 }
 
 function install(){
-	echo -e "\n"
-	echo -e "\n"
-	
 	#1、初始化配置
 	if test -z $app; then
 		echo "you must point the app by option -a that tell shell what to install , for example jdk, scala, hadoop, zookeeper, hbase, spark. "
 		exit $ST_ERR
 	fi
-	
 	init_conf
 	
 	#2、同步安装脚本
@@ -296,6 +298,7 @@ function print_help(){
 	echo -e "\t-hdp-hosts : you can point the hosts that the shell will exe on each of them. it will replace the default at $cluster_etc_root/hadoop-hosts"
 	echo -e "\t-zk-hosts : you can point the hosts that the shell will exe on each of them. it will replace the default at $cluster_etc_root/zk-hosts"
 	echo -e "\t-install-conf : you can point the install conf file that tell shell where to install, etc. it will replace the default at $cluster_etc_root/install.conf"
+	echo -e "\t-redo(re install) : point redo is true, will remove the exists install home , soft link and env sh."
 }
 
 #循环处理参数，入口
@@ -337,6 +340,11 @@ while test -n "$1"; do
 				exit $ST_ERR
 			fi
 			cluster_install_conf=$2
+			shift
+		;;
+		
+		-redo)
+			reinstall=$2
 			shift
 		;;
 		
