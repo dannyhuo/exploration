@@ -3,6 +3,9 @@ import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutp
 import scala.io.Source
 import java.util.HashMap
 
+import org.apache.spark.SparkUserAppException
+import org.apache.spark.sql.AnalysisException
+
 /**
   * Created by huoqiang on 14/7/2017.
   */
@@ -123,7 +126,7 @@ object ScalaTest {
       println(key + ": " + map2.get(key))
     }
 
-    //
   }
+
 
 }

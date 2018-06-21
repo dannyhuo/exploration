@@ -1,4 +1,4 @@
-package crm.up.service;
+package com.lvmama.crm.up.service;
 
 import com.caucho.hessian.client.HessianProxyFactory;
 import com.lvmama.crm.enumerate.UpModelJobEnum;

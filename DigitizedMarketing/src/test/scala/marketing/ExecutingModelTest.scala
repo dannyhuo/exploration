@@ -1,9 +1,7 @@
 package marketing
 
-import marketing.sqlmem.model.{SqlMemHeart, ExecutingModel}
-import org.apache.hadoop.fs.Path
-import marketing.sqlmem.util.DfsUtil
-
+import com.lvmama.marketing.sqlmem.model.{ExecutingModel, SqlMemHeart}
+import com.lvmama.marketing.sqlmem.util.DfsUtil
 /**
   * Created by huoqiang on 27/7/2017.
   */

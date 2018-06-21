@@ -2,13 +2,10 @@ package crm.digit.mkting
 
 import java.io.FileNotFoundException
 import java.io.IOException
-
 import java.text.SimpleDateFormat
 
 import crm.digit.mkting.df.{DfsUtil, Rdd2DFUtil}
 import crm.digit.mkting.sql.TablesSchema
-import crm.digit.mkting.mem.query.ModelEnum
-import crm.up.service.UpModelJobHessianServiceProxy
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -23,6 +20,8 @@ import java.util.Date
 
 import com.caucho.hessian.client.HessianRuntimeException
 import com.lvmama.crm.enumerate.UpModelJobEnum
+import com.lvmama.crm.up.service.UpModelJobHessianServiceProxy
+import crm.digit.mkting.mem.query.constant.Constant
 
 
 
@@ -240,7 +239,7 @@ object SqlMemQuery {
         val preTry = execedModel.retry()
         var errorMsg : String = null
         var resultId : Long = -1
-        if(preTry == ModelEnum.CAN_RETRY){
+        if(preTry == Constant.CAN_RETRY){
           //任务执行前，通知crm系统任务开始
           resultId = beforeExeTask(execedModel.getModelId().toLong)
           if(resultId > -1){
@@ -249,13 +248,13 @@ object SqlMemQuery {
               //输出结果
               outputResult(res, execedModel.getModelId(), execedModel.getExecNo)
               //执行成功后，回调crm通知
-              afterExeTask(execedModel, ModelEnum.EXEC_OKAY, resultId)
+              afterExeTask(execedModel, Constant.EXEC_OKAY, resultId)
             }catch{
               case ex : AnalysisException => {
                 //sql语法解析错误
                 ex.printStackTrace()
                 execedModel.addErrMsg(ex.getMessage())
-                afterExeTask(execedModel, ModelEnum.MODEL_ERROR, resultId)
+                afterExeTask(execedModel, Constant.MODEL_ERROR, resultId)
               }
               case ex : SparkException => {
                 //spark exception
@@ -265,7 +264,7 @@ object SqlMemQuery {
               case ex : NullPointerException => {
                 ex.printStackTrace()
                 execedModel.addErrMsg(ex.getMessage())
-                afterExeTask(execedModel, ModelEnum.MODEL_ERROR, resultId)
+                afterExeTask(execedModel, Constant.MODEL_ERROR, resultId)
               }
               case ex : Exception => {
                 errorMsg = ex.getMessage
@@ -280,13 +279,13 @@ object SqlMemQuery {
             //任务未开始，抵消一次重试次数
             execedModel.compensateRetriedTimes()
           }
-        }else if(preTry == ModelEnum.MODEL_ERROR){
+        }else if(preTry == Constant.MODEL_ERROR){
           //模型异常
           errorMsg = "The model of '" + execedModel.getModel() + "' error!"
           println(errorMsg)
           execedModel.addErrMsg(errorMsg)
           afterExeTask(execedModel, preTry, resultId)
-        }else if(preTry == ModelEnum.MAX_TRIED){
+        }else if(preTry == Constant.MAX_TRIED){
           //重试达到最大次数
           errorMsg = "The model of '"+execedModel.getModel()+"' retry for '" + execedModel.getTriedTimes() + "' times till error!"
           println(errorMsg)
@@ -326,7 +325,7 @@ object SqlMemQuery {
     //1、通知crm系统
     if(resultId > 0){//大于0，表示启动任务前告知crm系统成功
       var crmEvent = UpModelJobEnum.EXE_EVENT.emergencyStop
-      if(event == ModelEnum.EXEC_OKAY){
+      if(event == Constant.EXEC_OKAY){
         crmEvent = UpModelJobEnum.EXE_EVENT.runSucessful
       }
       var res = -1L
@@ -347,9 +346,9 @@ object SqlMemQuery {
     //2、释放模型资源
     val modelPath = executedModel.getModelPath()
     var toPath : Path = null
-    if(event == ModelEnum.NOTIFY_CRM_FAILED){
+    if(event == Constant.NOTIFY_CRM_FAILED){
       //暂不做处理，稍后重试
-    }else if(event == ModelEnum.MAX_TRIED){
+    }else if(event == Constant.MAX_TRIED){
       println("fs.rename(modelPath, new Path(crmDataModelExecedFailedDir + modelPath.getName)), modelPath " + modelPath + " => " + crmDataModelExecedFailedDir + modelPath.getName)
       toPath = new Path(crmDataModelExecedFailedDir + modelPath.getName)
       if(!fs.exists(toPath)){
@@ -358,7 +357,7 @@ object SqlMemQuery {
         fs.delete(modelPath, false)
       }
       execedModels.remove(modelPath.getName)
-    }else if(event == ModelEnum.EXEC_OKAY){
+    }else if(event == Constant.EXEC_OKAY){
       toPath = new Path(crmDataModelExecedOkayDir + modelPath.getName)
       if(!fs.exists(toPath)){
         fs.rename(modelPath, toPath)
@@ -366,7 +365,7 @@ object SqlMemQuery {
         fs.delete(modelPath, false)
       }
       execedModels.remove(modelPath.getName)
-    }else if(event == ModelEnum.MODEL_ERROR){
+    }else if(event == Constant.MODEL_ERROR){
       toPath = new Path(crmDataModelErrorDir + modelPath.getName)
       if(!fs.exists(toPath)){
         fs.rename(modelPath, toPath)
@@ -532,18 +531,18 @@ class ExecutedModel(model : String, modelPath : Path){
   def retry() : Int = {
     //模型错误
     if(!modelValid){
-      return ModelEnum.MODEL_ERROR
+      return Constant.MODEL_ERROR
     }
 
     //重试时间未到,等待
     val curTime = System.currentTimeMillis()
     if(curTime < nextRetryTime){
-      return ModelEnum.WAIT_RETRY
+      return Constant.WAIT_RETRY
     }
 
     //重试达到最大次数
     if(retriedTimes == maxRetryTimes){
-      return ModelEnum.MAX_TRIED
+      return Constant.MAX_TRIED
     }
 
     //可以重试
@@ -553,7 +552,7 @@ class ExecutedModel(model : String, modelPath : Path){
     }else{
       execed_once = true
     }
-    ModelEnum.CAN_RETRY
+    Constant.CAN_RETRY
   }
 
   /**

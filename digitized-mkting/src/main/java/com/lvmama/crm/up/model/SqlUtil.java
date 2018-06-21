@@ -1,4 +1,4 @@
-package crm.up.model;
+package com.lvmama.crm.up.model;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;

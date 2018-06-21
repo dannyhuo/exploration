@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat
 
 import crm.digit.mkting.df.{DfsUtil, Rdd2DFUtil}
 import crm.digit.mkting.sql.TablesSchema
-import crm.up.service.UpModelJobHessianService
 import crm.up.service.UpModelJobHessianServiceProxy
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Result
@@ -19,6 +18,7 @@ import java.util.HashMap
 import java.util.Date
 
 import com.lvmama.crm.enumerate.UpModelJobEnum
+import com.lvmama.crm.up.service.{UpModelJobHessianService, UpModelJobHessianServiceProxy}
 import org.apache.spark.rdd.RDD
 
 

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>digitized-mkting</groupId>
   <artifactId>digitized-mkting</artifactId>
-  <version>1.0.3-SNAPSHOT</version>
+  <version>1.0.6-SNAPSHOT</version>
   <inceptionYear>2008</inceptionYear>
   <properties>
     <scala.version>2.11.7</scala.version>
@@ -159,6 +159,19 @@
       <groupId>com.caucho</groupId>
       <artifactId>hessian</artifactId>
       <version>4.0.7</version>
+    </dependency>
+    <!--es-->
+    <dependency>
+      <groupId>org.elasticsearch</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <version>1.7.1</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch-spark-20_2.11 -->
+    <dependency>
+      <groupId>org.elasticsearch</groupId>
+      <artifactId>elasticsearch-spark-20_2.11</artifactId>
+      <version>5.5.0</version>
     </dependency>
 
 

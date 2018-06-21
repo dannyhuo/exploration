@@ -1,4 +1,4 @@
-package crm.up.service;
+package com.lvmama.crm.up.service;
 
 import com.lvmama.crm.enumerate.UpModelJobEnum.EXE_EVENT;
 import com.lvmama.crm.enumerate.UpModelJobEnum.EXE_STATUS;
